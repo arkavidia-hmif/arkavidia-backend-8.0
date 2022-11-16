@@ -23,7 +23,7 @@ const (
 )
 
 type Participant struct {
-	ID             uuid.UUID      `json:"participant_id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID             uuid.UUID      `json:"participant_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Name           string         `json:"name" gorm:"not null"`
 	Email          string         `json:"email" gorm:"not null"`
 	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:text[];not null"`

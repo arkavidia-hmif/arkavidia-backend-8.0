@@ -15,7 +15,7 @@ const (
 )
 
 type Submission struct {
-	ID         uuid.UUID       `json:"submission_id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID         uuid.UUID       `json:"submission_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	TeamID     uuid.UUID       `json:"team_id" gorm:"type:uuid;not null"`
 	LinkToFile string          `json:"link_to_file" gorm:"not null"`
 	Timestamp  time.Time       `json:"timestamp" gorm:"not null"`

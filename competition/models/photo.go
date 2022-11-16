@@ -22,7 +22,7 @@ const (
 )
 
 type Photo struct {
-	ID            uuid.UUID   `json:"photo_id" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID            uuid.UUID   `json:"photo_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	ParticipantID uuid.UUID   `json:"participant_id" gorm:"type:uuid; not null"`
 	LinkToFile    string      `json:"link_to_file" gorm:"not null"`
 	Status        PhotoStatus `json:"status" gorm:"not null"`
