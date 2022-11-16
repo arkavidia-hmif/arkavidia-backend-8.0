@@ -1,17 +1,24 @@
 package main
 
 import (
-	"net/http"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
+	"arkavidia-backend-8.0/competition/services/database"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("[ERROR] No .env file found!")
+	}
+}
 
 func main() {
 	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello World",
-		})
-	})
+	database.GetDB()
+
 	r.Run()
 }
