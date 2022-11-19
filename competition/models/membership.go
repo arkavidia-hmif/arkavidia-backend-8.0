@@ -15,7 +15,10 @@ const (
 type Membership struct {
 	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;primaryKey"`
 	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;primaryKey"`
-	Role          MembershipRole `json:"role"`
+	Role          MembershipRole `json:"role" gorm:"not null"`
 	Team          Team           `json:"-" gorm:"foreignKey:TeamID;references:ID"`
 	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
 }
+
+// TODO: Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih dengan lomba yang sama
+// TODO: Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih dengan role yang sama
