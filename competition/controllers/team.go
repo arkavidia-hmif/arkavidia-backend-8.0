@@ -41,6 +41,10 @@ type ChangePasswordRequest struct {
 	Password []byte `json:"password"`
 }
 
+type CompetitionRegistrationQuery struct {
+	TeamCategory models.TeamCategory `form:"competition" field:"competition"`
+}
+
 func SignInHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -202,6 +206,32 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		oldTeam := models.Team{ID: teamID}
 		newTeam := models.Team{HashedPassword: hashedPassword}
+		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "Success"} // TODO: Return baru message saja
+		c.JSON(http.StatusOK, response)
+		return
+	}
+}
+
+func CompetitionRegistration() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+		query := CompetitionRegistrationQuery{}
+
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldTeam := models.Team{ID: teamID}
+		newTeam := models.Team{TeamCategory: query.TeamCategory}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
