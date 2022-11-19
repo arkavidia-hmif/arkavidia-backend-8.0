@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"arkavidia-backend-8.0/competition/middlewares"
+	"arkavidia-backend-8.0/competition/routes"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
 )
@@ -25,6 +26,9 @@ func main() {
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
+	r.Use(middlewares.AuthMiddleware())
+
+	routes.TeamRoute(r)
 
 	r.Run()
 }

@@ -81,3 +81,9 @@ func SignInHandler() gin.HandlerFunc {
 		return
 	}
 }
+
+func SignUpHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+	}
+}
