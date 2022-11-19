@@ -8,18 +8,18 @@ import (
 type ParticipantCareerInterest string
 
 const (
-	SoftwareEngineering  ParticipantCareerInterest = "Software Engineering"
-	ProductManagement    ParticipantCareerInterest = "Product Management"
-	UIDesigner           ParticipantCareerInterest = "UI Designer"
-	UXDesigner           ParticipantCareerInterest = "UX Designer"
-	UXResearcher         ParticipantCareerInterest = "UX Researcher"
-	ITConsultant         ParticipantCareerInterest = "IT Consultant"
-	GameDeveloper        ParticipantCareerInterest = "Game Developer"
-	CyberSecurity        ParticipantCareerInterest = "Cyber Security"
-	BusinessAnalyst      ParticipantCareerInterest = "Business Analyst"
-	BusinessIntelligence ParticipantCareerInterest = "Business Intelligence"
-	DataScientist        ParticipantCareerInterest = "Data Scientist"
-	DataAnalyst          ParticipantCareerInterest = "Data Analyst"
+	SoftwareEngineering  ParticipantCareerInterest = "software-engineering"
+	ProductManagement    ParticipantCareerInterest = "product-management"
+	UIDesigner           ParticipantCareerInterest = "ui-designer"
+	UXDesigner           ParticipantCareerInterest = "ux-designer"
+	UXResearcher         ParticipantCareerInterest = "ux-researcher"
+	ITConsultant         ParticipantCareerInterest = "it-consultant"
+	GameDeveloper        ParticipantCareerInterest = "game-developer"
+	CyberSecurity        ParticipantCareerInterest = "cyber-security"
+	BusinessAnalyst      ParticipantCareerInterest = "business-analyst"
+	BusinessIntelligence ParticipantCareerInterest = "business-intelligence"
+	DataScientist        ParticipantCareerInterest = "data-scientist"
+	DataAnalyst          ParticipantCareerInterest = "data-analyst"
 )
 
 type Participant struct {

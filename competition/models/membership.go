@@ -10,9 +10,9 @@ import (
 type MembershipRole string
 
 const (
-	Leader    MembershipRole = "Leader"
-	MemberOne MembershipRole = "Member 1"
-	MemberTwo MembershipRole = "Member 2"
+	Leader    MembershipRole = "leader"
+	MemberOne MembershipRole = "member-1"
+	MemberTwo MembershipRole = "member-2"
 )
 
 type Membership struct {

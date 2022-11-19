@@ -9,9 +9,9 @@ import (
 type SubmissionStage string
 
 const (
-	FirstStage  SubmissionStage = "First Stage"
-	SecondStage SubmissionStage = "Second Stage"
-	FinalStage  SubmissionStage = "Final Stage"
+	FirstStage  SubmissionStage = "first-stage"
+	SecondStage SubmissionStage = "second-stage"
+	FinalStage  SubmissionStage = "final-stage"
 )
 
 type Submission struct {

@@ -7,18 +7,18 @@ import (
 type PhotoStatus string
 
 const (
-	NotUploaded            PhotoStatus = "Not Uploaded"
-	WaitingForVerification PhotoStatus = "Waiting for Verification"
-	Verified               PhotoStatus = "Verified"
-	Declined               PhotoStatus = "Declined"
+	NotUploaded            PhotoStatus = "not-uploaded"
+	WaitingForVerification PhotoStatus = "waiting-for-verification"
+	Verified               PhotoStatus = "verified"
+	Declined               PhotoStatus = "declined"
 )
 
 type PhotoType string
 
 const (
-	Pribadi             PhotoType = "Pribadi"
-	KartuPelajar        PhotoType = "Kartu Pelajar"
-	BuktiMahasiswaAktif PhotoType = "Bukti Mahasiswa Aktif"
+	Pribadi             PhotoType = "pribadi"
+	KartuPelajar        PhotoType = "kartu-pelajar"
+	BuktiMahasiswaAktif PhotoType = "bukti-mahasiswa-aktif"
 )
 
 type Photo struct {

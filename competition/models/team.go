@@ -7,10 +7,10 @@ import (
 type TeamCategory string
 
 const (
-	CP         TeamCategory = "CP"
-	Datavidia  TeamCategory = "Datavidia"
-	UXVidia    TeamCategory = "UXVidia"
-	Arkalogica TeamCategory = "Arkalogica"
+	CP         TeamCategory = "cp"
+	Datavidia  TeamCategory = "datavidia"
+	UXVidia    TeamCategory = "uxvidia"
+	Arkalogica TeamCategory = "arkalogica"
 )
 
 type Team struct {
