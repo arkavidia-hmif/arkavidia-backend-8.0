@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/google/uuid"
 
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 )
@@ -30,10 +31,10 @@ func GetClient() *storage.Client {
 	return currentClient
 }
 
-func UploadFile(client *storage.Client, filename string, uploadPath string, file multipart.File) error {
+func UploadFile(client *storage.Client, filename uuid.UUID, uploadPath string, file multipart.File) error {
 	config := storageConfig.GetStorageConfig()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Duration(config.FileTimeout).Seconds()))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)
 	defer cancel()
 
 	storageWriter := client.Bucket(config.BucketName).Object(fmt.Sprintf("%s/%s", uploadPath, filename)).NewWriter(ctx)
@@ -47,10 +48,10 @@ func UploadFile(client *storage.Client, filename string, uploadPath string, file
 	return nil
 }
 
-func DownloadFile(client *storage.Client, filename string, downloadPath string) (io.Writer, error) {
+func DownloadFile(client *storage.Client, filename uuid.UUID, downloadPath string) (io.Writer, error) {
 	config := storageConfig.GetStorageConfig()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Duration(config.FileTimeout).Seconds()))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)
 	defer cancel()
 
 	storageReader, err := client.Bucket(config.BucketName).Object(fmt.Sprintf("%s/%s", downloadPath, filename)).NewReader(ctx)
@@ -67,10 +68,10 @@ func DownloadFile(client *storage.Client, filename string, downloadPath string) 
 	return file, nil
 }
 
-func DeleteFile(client *storage.Client, filename string, deletePath string) error {
+func DeleteFile(client *storage.Client, filename uuid.UUID, deletePath string) error {
 	config := storageConfig.GetStorageConfig()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Duration(config.FileTimeout).Seconds()))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)
 	defer cancel()
 
 	object := client.Bucket(config.BucketName).Object(fmt.Sprintf("%s/%s", deletePath, filename))
