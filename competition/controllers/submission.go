@@ -3,8 +3,12 @@ package controllers
 import (
 	"mime/multipart"
 
-	"arkavidia-backend-8.0/competition/models"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
+	storageConfig "arkavidia-backend-8.0/competition/config/storage"
+	"arkavidia-backend-8.0/competition/models"
+	databaseService "arkavidia-backend-8.0/competition/services/database"
 )
 
 type AddSubmissionRequest struct {
@@ -18,18 +22,26 @@ type EditSubmissionRequest struct {
 
 func GetSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		db := databaseService.GetDB()
+		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uuid.UUID)
 	}
 }
 
 func AddSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		db := databaseService.GetDB()
+		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+		request := AddSubmissionRequest{}
 	}
 }
 
 func EditSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		db := databaseService.GetDB()
+		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+		request := EditSubmissionRequest{}
 	}
 }

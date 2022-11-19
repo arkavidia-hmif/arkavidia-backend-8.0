@@ -25,9 +25,9 @@ type Membership struct {
 
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih dengan jenis lomba yang sama atau memiliki role leader
 func (membership *Membership) BeforeSave(tx *gorm.DB) error {
-	conditionMembership := Membership{ParticipantID: membership.ParticipantID}
+	condition := Membership{ParticipantID: membership.ParticipantID}
 	newMemberships := []Membership{}
-	if err := tx.Where(&conditionMembership).Find(&newMemberships).Error; err != nil {
+	if err := tx.Where(&condition).Find(&newMemberships).Error; err != nil {
 		return err
 	}
 

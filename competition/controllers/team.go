@@ -92,7 +92,7 @@ func SignInHandler() gin.HandlerFunc {
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": authTokenString} // TODO: Return value baru token saja
+		response := gin.H{"Message": "Success", "Data": authTokenString}
 		c.JSON(http.StatusOK, response)
 		return
 	}
@@ -167,7 +167,7 @@ func SignUpHandler() gin.HandlerFunc {
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": authTokenString} // TODO: Return value baru token saja
+		response := gin.H{"Message": "Success", "Data": authTokenString}
 		c.JSON(http.StatusOK, response)
 		return
 	}
@@ -212,7 +212,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 			return
 		}
 
-		response := gin.H{"Message": "Success"} // TODO: Return baru message saja
+		response := gin.H{"Message": "Success"}
 		c.JSON(http.StatusOK, response)
 		return
 	}
@@ -238,7 +238,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 			return
 		}
 
-		response := gin.H{"Message": "Success"} // TODO: Return baru message saja
+		response := gin.H{"Message": "Success"}
 		c.JSON(http.StatusOK, response)
 		return
 	}
