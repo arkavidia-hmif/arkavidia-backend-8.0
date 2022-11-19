@@ -15,8 +15,8 @@ const (
 
 type Team struct {
 	ID           uuid.UUID    `json:"team_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Username     string       `json:"username" gorm:"not null"`
+	Username     string       `json:"username" gorm:"not null;unique"`
 	Password     []byte       `json:"password" gorm:"not null"`
-	TeamName     string       `json:"team_name" gorm:"not null"`
-	TeamCategory TeamCategory `json:"team_category" gorm:"not null"`
+	TeamName     string       `json:"team_name" gorm:"not null;unique"`
+	TeamCategory TeamCategory `json:"team_category"`
 }
