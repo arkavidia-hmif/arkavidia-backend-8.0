@@ -8,4 +8,6 @@ import (
 
 func TeamRoute(route *gin.Engine) {
 	route.POST("/sign-in", controllers.SignInHandler())
+	route.POST("/sign-up", controllers.SignUpHandler())
+	route.GET("/team", controllers.GetTeam())
 }

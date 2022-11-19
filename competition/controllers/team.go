@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -32,7 +33,12 @@ type Member struct {
 type SignUpRequest struct {
 	Username     string   `json:"username"`
 	Password     []byte   `json:"password"`
+	TeamName     string   `json:"team_name"`
 	ListOfMember []Member `json:"member_list"`
+}
+
+type ChangePasswordRequest struct {
+	Password []byte `json:"password"`
 }
 
 func SignInHandler() gin.HandlerFunc {
@@ -41,23 +47,20 @@ func SignInHandler() gin.HandlerFunc {
 		config := authenticationConfig.GetAuthConfig()
 		request := SignInRequest{}
 
-		err := c.BindJSON(&request)
-		if err != nil {
+		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		team := models.Team{Username: request.Username}
-		err = db.Find(&team).Error
-		if err != nil {
-			response := gin.H{"Message": "Error: Database Experiencing Problems"}
-			c.JSON(http.StatusInternalServerError, response)
+		if err := db.Find(&team).Error; err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword(team.HashedPassword, request.Password)
-		if err != nil {
+		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, request.Password); err != nil {
 			response := gin.H{"Message": "Error: Invalid Username or Password"}
 			c.JSON(http.StatusUnauthorized, response)
 			return
@@ -97,17 +100,22 @@ func SignUpHandler() gin.HandlerFunc {
 		config := authenticationConfig.GetAuthConfig()
 		request := SignUpRequest{}
 
-		err := c.BindJSON(&request)
-		if err != nil {
+		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
-		team := models.Team{Username: request.Username, HashedPassword: hashedPassword}
+		if err != nil {
+			response := gin.H{"Message": "Error: Bcrypt Errors"}
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
 
-		err = db.Transaction(func(tx *gorm.DB) error {
+		team := models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName}
+
+		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
 			}
@@ -127,10 +135,9 @@ func SignUpHandler() gin.HandlerFunc {
 				}
 			}
 			return nil
-		})
-		if err != nil {
-			response := gin.H{"Message": "Error: Database Experiencing Problems"}
-			c.JSON(http.StatusInternalServerError, response)
+		}); err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -157,6 +164,51 @@ func SignUpHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "Success", "Data": authTokenString} // TODO: Return value baru token saja
+		c.JSON(http.StatusOK, response)
+		return
+	}
+}
+
+func GetTeam() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+
+		team := models.Team{ID: teamID}
+		if err := db.Find(&team).Error; err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "Success", "Data": team}
+		c.JSON(http.StatusOK, response)
+		return
+	}
+}
+
+func ChangePasswordHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+		request := ChangePasswordRequest{}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
+		if err != nil {
+			response := gin.H{"Message": "Error: Bcrypt Errors"}
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		oldTeam := models.Team{ID: teamID}
+		newTeam := models.Team{HashedPassword: hashedPassword}
+		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "Success"} // TODO: Return baru message saja
 		c.JSON(http.StatusOK, response)
 		return
 	}

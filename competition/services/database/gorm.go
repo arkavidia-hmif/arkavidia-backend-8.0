@@ -21,8 +21,7 @@ func Init() *gorm.DB {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&models.Participant{}, &models.Team{}, &models.Membership{}, &models.Photo{}, &models.Submission{})
-	if err != nil {
+	if err := db.AutoMigrate(&models.Participant{}, &models.Team{}, &models.Membership{}, &models.Photo{}, &models.Submission{}); err != nil {
 		panic(err)
 	}
 
