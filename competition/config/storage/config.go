@@ -6,25 +6,28 @@ import (
 )
 
 type StorageConfig struct {
-	FileUploadTimeout int
-	PhotoDir          string
-	SubmissionDir     string
+	FileTimeout   int
+	BucketName    string
+	PhotoDir      string
+	SubmissionDir string
 }
 
 var currentStorageConfig *StorageConfig = nil
 
 func Init() *StorageConfig {
-	fileUploadTimeout, err := strconv.Atoi(os.Getenv("FILE_UPLOAD_TIMEOUT"))
+	fileTimeout, err := strconv.Atoi(os.Getenv("FILE_TIMEOUT"))
 	if err != nil {
 		panic(err)
 	}
+	bucketName := os.Getenv("BUCKET_NAME")
 	photoDir := os.Getenv("PHOTO_DIR")
 	submissionDir := os.Getenv("SUBMISSION_DIR")
 
 	return &StorageConfig{
-		FileUploadTimeout: fileUploadTimeout,
-		PhotoDir:          photoDir,
-		SubmissionDir:     submissionDir,
+		FileTimeout:   fileTimeout,
+		BucketName:    bucketName,
+		PhotoDir:      photoDir,
+		SubmissionDir: submissionDir,
 	}
 }
 

@@ -13,8 +13,8 @@ import (
 var currentDB *gorm.DB = nil
 
 func Init() *gorm.DB {
-	databaseConfig := databaseConfig.GetDatabaseConfig()
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", databaseConfig.Host, databaseConfig.User, databaseConfig.Password, databaseConfig.DBName, databaseConfig.Port)
+	config := databaseConfig.GetDatabaseConfig()
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", config.Host, config.User, config.Password, config.DBName, config.Port)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
