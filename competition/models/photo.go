@@ -25,6 +25,7 @@ type Photo struct {
 	ID            uuid.UUID   `json:"photo_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	ParticipantID uuid.UUID   `json:"participant_id" gorm:"type:uuid;not null"`
 	LinkToFile    uuid.UUID   `json:"link_to_file" gorm:"type:uuid;not null"`
+	FileExtension string      `json:"file_extension" gorm:"not null"`
 	Status        PhotoStatus `json:"status" gorm:"not null"`
 	Type          PhotoType   `json:"type" gorm:"not null"`
 	Participant   Participant `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
