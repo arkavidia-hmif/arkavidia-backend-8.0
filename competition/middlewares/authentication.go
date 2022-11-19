@@ -37,7 +37,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		authString := strings.Replace(authHeader, "Bearer ", "", 1)
 		authToken, err := jwt.Parse(authString, func(authToken *jwt.Token) (interface{}, error) {
 			if method, ok := authToken.Method.(*jwt.SigningMethodHMAC); !ok || method != config.JWTSigningMethod {
-				return nil, fmt.Errorf("Signing Method Invalid!")
+				return nil, fmt.Errorf("Error: Signing Method Invalid!")
 			}
 			return config.JWTSignatureKey, nil
 		})
