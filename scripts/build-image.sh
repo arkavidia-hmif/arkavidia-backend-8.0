@@ -1,0 +1,1 @@
+docker build -t arkavidia-backend:latest .
