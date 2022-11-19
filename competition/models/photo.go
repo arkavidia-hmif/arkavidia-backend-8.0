@@ -17,7 +17,7 @@ type PhotoType string
 
 const (
 	Pribadi             PhotoType = "Pribadi"
-	KartuPelajar        PhotoType = "KartuPelajar"
+	KartuPelajar        PhotoType = "Kartu Pelajar"
 	BuktiMahasiswaAktif PhotoType = "Bukti Mahasiswa Aktif"
 )
 
