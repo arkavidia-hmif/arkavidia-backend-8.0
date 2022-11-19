@@ -7,9 +7,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 )
+
+type AuthClaims struct {
+	jwt.StandardClaims
+	TeamID uuid.UUID `json:"team_id"`
+}
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -22,16 +28,16 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
-			response := gin.H{"Message": "Error: No token provided!"}
+			response := gin.H{"Message": "Error: No Token Provided!"}
 			c.JSON(http.StatusUnauthorized, response)
 			c.Abort()
 			return
 		}
 
 		authString := strings.Replace(authHeader, "Bearer ", "", 1)
-		token, err := jwt.Parse(authString, func(token *jwt.Token) (interface{}, error) {
-			if method, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || method != config.JWTSigningMethod {
-				return nil, fmt.Errorf("Signing method invalid!")
+		authToken, err := jwt.Parse(authString, func(authToken *jwt.Token) (interface{}, error) {
+			if method, ok := authToken.Method.(*jwt.SigningMethodHMAC); !ok || method != config.JWTSigningMethod {
+				return nil, fmt.Errorf("Signing Method Invalid!")
 			}
 			return config.JWTSignatureKey, nil
 		})
@@ -42,9 +48,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			response := gin.H{"Message": "Claims invalid!"}
+		claims, ok := authToken.Claims.(jwt.MapClaims)
+		if !ok || !authToken.Valid {
+			response := gin.H{"Message": "Claims Invalid!"}
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return

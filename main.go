@@ -5,8 +5,8 @@ import (
 	"github.com/joho/godotenv"
 
 	"arkavidia-backend-8.0/competition/middlewares"
-	"arkavidia-backend-8.0/competition/services/database"
-	"arkavidia-backend-8.0/competition/services/storage"
+	databaseService "arkavidia-backend-8.0/competition/services/database"
+	storageService "arkavidia-backend-8.0/competition/services/storage"
 )
 
 func init() {
@@ -20,8 +20,8 @@ func main() {
 	r := gin.Default()
 
 	// Setup services
-	database.GetDB()
-	storage.GetClient()
+	databaseService.GetDB()
+	storageService.GetClient()
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
