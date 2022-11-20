@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -106,7 +104,7 @@ func SignUpHandler() gin.HandlerFunc {
 			return
 		}
 
-		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, bcrypt.DefaultCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
@@ -143,6 +141,7 @@ func SignUpHandler() gin.HandlerFunc {
 			},
 			TeamID: team.ID,
 		}
+
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
@@ -151,14 +150,7 @@ func SignUpHandler() gin.HandlerFunc {
 			return
 		}
 
-		authTokenString, err := json.Marshal(gin.H{"token": signedAuthToken})
-		if err != nil {
-			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS", "Data": authTokenString}
+		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}
 		c.JSON(http.StatusCreated, response)
 	}
 }
@@ -181,14 +173,19 @@ func GetTeamHandler() gin.HandlerFunc {
 	}
 }
 
-// SLOW RESPONSE
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uint)
 
 		request := ChangePasswordRequest{}
-		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, bcrypt.DefaultCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
