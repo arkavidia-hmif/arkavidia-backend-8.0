@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -15,6 +16,15 @@ const (
 	MemberTwo MembershipRole = "member-2"
 )
 
+func (membershipRole *MembershipRole) Scan(value interface{}) error {
+	*membershipRole = MembershipRole(value.([]byte))
+	return nil
+}
+
+func (membershipRole MembershipRole) Value() (driver.Value, error) {
+	return string(membershipRole), nil
+}
+
 type Membership struct {
 	gorm.Model
 	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;uniqueIndex:membership_index"`
@@ -24,7 +34,8 @@ type Membership struct {
 	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
 }
 
-// Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih dengan jenis lomba yang sama atau memiliki role leader
+// Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih
+// dengan jenis lomba yang sama atau memiliki role leader lebhi dari satu kali
 func (membership *Membership) BeforeSave(tx *gorm.DB) error {
 	condition := Membership{ParticipantID: membership.ParticipantID}
 	newMemberships := []Membership{}

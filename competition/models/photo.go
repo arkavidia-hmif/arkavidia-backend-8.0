@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -13,6 +15,15 @@ const (
 	Declined               PhotoStatus = "declined"
 )
 
+func (photoStatus *PhotoStatus) Scan(value interface{}) error {
+	*photoStatus = PhotoStatus(value.([]byte))
+	return nil
+}
+
+func (photoStatus PhotoStatus) Value() (driver.Value, error) {
+	return string(photoStatus), nil
+}
+
 type PhotoType string
 
 const (
@@ -21,12 +32,21 @@ const (
 	BuktiMahasiswaAktif PhotoType = "bukti-mahasiswa-aktif"
 )
 
+func (photoType *PhotoType) Scan(value interface{}) error {
+	*photoType = PhotoType(value.([]byte))
+	return nil
+}
+
+func (photoType PhotoType) Value() (driver.Value, error) {
+	return string(photoType), nil
+}
+
 type Photo struct {
 	gorm.Model
 	FileName      uuid.UUID   `json:"file_name" gorm:"type:uuid;unique"`
 	FileExtension string      `json:"file_extension" gorm:"not null"`
 	ParticipantID uuid.UUID   `json:"participant_id" gorm:"type:uuid;not null;uniqueIndex:photo_index"`
-	Status        PhotoStatus `json:"status" gorm:"not null"`
-	Type          PhotoType   `json:"type" gorm:"not null;uniqueIndex:photo_index"`
+	Status        PhotoStatus `json:"status" gorm:"type:photo_status;not null"`
+	Type          PhotoType   `json:"type" gorm:"type:photo_type;not null;uniqueIndex:photo_index"`
 	Participant   Participant `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
 }

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -13,11 +15,20 @@ const (
 	FinalStage  SubmissionStage = "final-stage"
 )
 
+func (submissionStage *SubmissionStage) Scan(value interface{}) error {
+	*submissionStage = SubmissionStage(value.([]byte))
+	return nil
+}
+
+func (submissionStage SubmissionStage) Value() (driver.Value, error) {
+	return string(submissionStage), nil
+}
+
 type Submission struct {
 	gorm.Model
 	FileName      uuid.UUID       `json:"file_name" gorm:"type:uuid;unique"`
 	FileExtension string          `json:"file_extension" gorm:"not null"`
 	TeamID        uuid.UUID       `json:"team_id" gorm:"type:uuid;not null;uniqueIndex:submission_index"`
-	Stage         SubmissionStage `json:"stage" gorm:"not null;default:current_timestamp;uniqueIndex:submission_index"`
+	Stage         SubmissionStage `json:"stage" gorm:"type:submission_stage;not null;uniqueIndex:submission_index"`
 	Team          Team            `json:"-" gorm:"foreignKey:TeamID;references:ID"`
 }
