@@ -105,7 +105,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
+		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
 			response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
