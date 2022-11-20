@@ -151,7 +151,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", photo.FileName, photo.FileExtension), config.PhotoDir); err != nil {
+		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", photo.FileName.String(), photo.FileExtension), config.PhotoDir); err != nil {
 			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return

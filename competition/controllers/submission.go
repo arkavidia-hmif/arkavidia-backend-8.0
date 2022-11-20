@@ -22,7 +22,8 @@ type AddSubmissionRequest struct {
 }
 
 type DeleteSubmissionRequest struct {
-	FileName string `json:"file_name"`
+	FileName      string `json:"file_name"`
+	FileExtension string `json:"file_extension"`
 }
 
 func GetSubmissionHandler() gin.HandlerFunc {
@@ -109,13 +110,13 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 
 		condition := models.Submission{FileName: fileUUID, TeamID: teamID}
 		submission := models.Submission{}
-		if err := db.Where(condition).Delete(&submission).Error; err != nil {
+		if err := db.Where(&condition).Delete(&submission).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension), config.SubmissionDir); err != nil {
+		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName.String(), submission.FileExtension), config.SubmissionDir); err != nil {
 			fmt.Println(err)
 			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
