@@ -24,16 +24,17 @@ type SignInRequest struct {
 }
 
 type Member struct {
-	Name  string                `json:"name"`
-	Email string                `json:"email"`
-	Role  models.MembershipRole `json:"role"`
+	Name           string                             `json:"name"`
+	Email          string                             `json:"email"`
+	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
+	Role           models.MembershipRole              `json:"role"`
 }
 
 type SignUpRequest struct {
-	Username     string   `json:"username"`
-	Password     []byte   `json:"password"`
-	TeamName     string   `json:"team_name"`
-	ListOfMember []Member `json:"member_list"`
+	Username string   `json:"username"`
+	Password []byte   `json:"password"`
+	TeamName string   `json:"team_name"`
+	Members  []Member `json:"member_list"`
 }
 
 type ChangePasswordRequest struct {
@@ -117,13 +118,12 @@ func SignUpHandler() gin.HandlerFunc {
 		}
 
 		team := models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName}
-
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
 			}
-			for _, member := range request.ListOfMember {
-				participant := models.Participant{Name: member.Name, Email: member.Email}
+			for _, member := range request.Members {
+				participant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
 				if err := tx.Find(&participant).Error; err != nil {
 					if !errors.Is(err, gorm.ErrRecordNotFound) {
 						return err

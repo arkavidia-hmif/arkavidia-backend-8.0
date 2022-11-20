@@ -6,7 +6,7 @@ import (
 	"arkavidia-backend-8.0/competition/controllers"
 )
 
-func PhotoSubmission(route *gin.Engine) {
+func PhotoRoute(route *gin.Engine) {
 	route.GET("/get-photo-data", controllers.AddPhotoHandler())
 	route.POST("/add-photo", controllers.AddPhotoHandler())
 	route.DELETE("/delete-photo", controllers.DeletePhotoHandler())

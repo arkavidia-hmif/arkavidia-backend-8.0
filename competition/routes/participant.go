@@ -7,6 +7,6 @@ import (
 )
 
 func ParticipantRoute(route *gin.Engine) {
-	route.GET("/get-participant-data", controllers.GetParticipantHandler())
-	route.POST("/add-participant", controllers.AddParticipantHandler())
+	route.GET("/get-member-data", controllers.GetMemberHandler())
+	route.POST("/add-member", controllers.AddMemberHandler())
 }

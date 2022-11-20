@@ -27,7 +27,11 @@ func main() {
 	r.Use(middlewares.CORSMiddleware())
 	r.Use(middlewares.AuthMiddleware())
 
+	// Routes
 	routes.TeamRoute(r)
+	routes.ParticipantRoute(r)
+	routes.SubmissionRoute(r)
+	routes.PhotoRoute(r)
 
 	r.Run()
 }
