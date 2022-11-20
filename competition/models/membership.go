@@ -29,9 +29,9 @@ type Membership struct {
 	gorm.Model
 	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;uniqueIndex:membership_index"`
 	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;uniqueIndex:membership_index"`
-	Role          MembershipRole `json:"role" gorm:"not null"`
-	Team          Team           `json:"-" gorm:"foreignKey:TeamID;references:ID"`
-	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
+	Role          MembershipRole `json:"role" gorm:"type:membership_role;not null"`
+	Team          Team           `json:"-" gorm:"foreignKey:TeamID;references:UUID"`
+	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:UUID"`
 }
 
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih

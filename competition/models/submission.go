@@ -30,5 +30,5 @@ type Submission struct {
 	FileExtension string          `json:"file_extension" gorm:"not null"`
 	TeamID        uuid.UUID       `json:"team_id" gorm:"type:uuid;not null;uniqueIndex:submission_index"`
 	Stage         SubmissionStage `json:"stage" gorm:"type:submission_stage;not null;uniqueIndex:submission_index"`
-	Team          Team            `json:"-" gorm:"foreignKey:TeamID;references:ID"`
+	Team          Team            `json:"-" gorm:"foreignKey:TeamID;references:UUID"`
 }

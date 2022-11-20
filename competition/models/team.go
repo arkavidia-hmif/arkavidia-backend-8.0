@@ -27,7 +27,7 @@ func (teamCategory TeamCategory) Value() (driver.Value, error) {
 
 type Team struct {
 	gorm.Model
-	TeamID         uuid.UUID    `json:"team_id" gorm:"type:uuid;not null;unique"`
+	UUID           uuid.UUID    `json:"team_id" gorm:"type:uuid;not null;unique"`
 	Username       string       `json:"username" gorm:"not null;unique"`
 	HashedPassword []byte       `json:"password" gorm:"not null"`
 	TeamName       string       `json:"team_name" gorm:"not null;unique"`
@@ -35,6 +35,6 @@ type Team struct {
 }
 
 func (team *Team) BeforeCreate(tx *gorm.DB) error {
-	team.TeamID = uuid.New()
+	team.UUID = uuid.New()
 	return nil
 }

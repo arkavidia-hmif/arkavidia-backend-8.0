@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -36,13 +35,13 @@ func (participantCareerInterest ParticipantCareerInterest) Value() (driver.Value
 
 type Participant struct {
 	gorm.Model
-	ParticipantID  uuid.UUID      `json:"participant_id" gorm:"type:uuid;not null;unique"`
-	Name           string         `json:"name" gorm:"not null;unique"`
-	Email          string         `json:"email" gorm:"not null;unique"`
-	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:text[];default:array[]::text[];not null"`
+	UUID           uuid.UUID                   `json:"participant_id" gorm:"type:uuid;not null;unique"`
+	Name           string                      `json:"name" gorm:"not null;unique"`
+	Email          string                      `json:"email" gorm:"not null;unique"`
+	CareerInterest []ParticipantCareerInterest `json:"career_interest" gorm:"type:participant_career_interest[];default:array[]::participant_career_interest[];not null"`
 }
 
 func (participant *Participant) BeforeCreate(tx *gorm.DB) error {
-	participant.ParticipantID = uuid.New()
+	participant.UUID = uuid.New()
 	return nil
 }
