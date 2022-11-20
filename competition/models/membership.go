@@ -16,9 +16,9 @@ const (
 )
 
 type Membership struct {
-	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;primaryKey;uniqueIndex:composite_index"`
-	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;primaryKey;uniqueIndex:composite_index"`
-	Role          MembershipRole `json:"role" gorm:"not null;uniqueIndex:composite_index"`
+	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;primaryKey;uniqueIndex:membership_index"`
+	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;primaryKey;uniqueIndex:membership_index"`
+	Role          MembershipRole `json:"role" gorm:"not null;uniqueIndex:membership_index"`
 	Team          Team           `json:"-" gorm:"foreignKey:TeamID;references:ID"`
 	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:ID"`
 }

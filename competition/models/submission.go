@@ -17,8 +17,8 @@ const (
 type Submission struct {
 	FileName      uuid.UUID       `json:"file_name" gorm:"type:uuid;primaryKey"`
 	FileExtension string          `json:"file_extension" gorm:"not null"`
-	TeamID        uuid.UUID       `json:"team_id" gorm:"type:uuid;not null"`
+	TeamID        uuid.UUID       `json:"team_id" gorm:"type:uuid;not null;uniqueIndex:submission_index"`
 	Timestamp     time.Time       `json:"timestamp" gorm:"not null"`
-	Stage         SubmissionStage `json:"stage" gorm:"not null;default:current_timestamp"`
+	Stage         SubmissionStage `json:"stage" gorm:"not null;default:current_timestamp;uniqueIndex:submission_index"`
 	Team          Team            `json:"-" gorm:"foreignKey:TeamID;references:ID"`
 }
