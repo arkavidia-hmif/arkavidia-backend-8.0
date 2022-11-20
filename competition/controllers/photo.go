@@ -40,7 +40,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 
 		request := GetPhotoRequest{}
 		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "Error: Bad Request"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
