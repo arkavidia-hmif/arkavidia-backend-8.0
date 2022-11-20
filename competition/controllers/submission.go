@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/models"
@@ -18,12 +17,12 @@ import (
 )
 
 type AddSubmissionRequest struct {
-	Stage models.SubmissionStage `from:"stage" field:"stage"`
+	Stage models.SubmissionStage `form:"stage" field:"stage"`
 	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
 }
 
 type DeleteSubmissionRequest struct {
-	FileName uuid.UUID `json:"file_name"`
+	FileName string `json:"file_name"`
 }
 
 func GetSubmissionHandler() gin.HandlerFunc {
@@ -32,7 +31,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uint)
 
-		condition := models.Submission{Model: gorm.Model{ID: teamID}}
+		condition := models.Submission{TeamID: teamID}
 		submissions := []models.Submission{}
 		if err := db.Where(&condition).Find(&submissions).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
@@ -54,14 +53,14 @@ func AddSubmissionHandler() gin.HandlerFunc {
 
 		request := AddSubmissionRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-			response := gin.H{"Message": "Error: BAD REQUEST"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		openedFile, err := request.File.Open()
 		if err != nil {
-			response := gin.H{"Message": "Error: FILE CANNOT BE ACCESSED"}
+			response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -71,13 +70,13 @@ func AddSubmissionHandler() gin.HandlerFunc {
 
 		submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Stage: request.Stage}
 		if err := db.Create(&submission).Error; err != nil {
-			response := gin.H{"Message": "Error: BAD REQUEST"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
-			response := gin.H{"Message": "Error: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
+			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
@@ -95,21 +94,30 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		teamID := c.MustGet("team_id").(uint)
 
 		request := DeleteSubmissionRequest{}
-		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-			response := gin.H{"Message": "Error: BAD REQUEST"}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		submission := models.Submission{FileName: request.FileName, TeamID: teamID}
-		if err := db.Delete(&submission).Error; err != nil {
-			response := gin.H{"Message": "Error: BAD REQUEST"}
+		fileUUID, err := uuid.Parse(request.FileName)
+		if err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		condition := models.Submission{FileName: fileUUID, TeamID: teamID}
+		submission := models.Submission{}
+		if err := db.Where(condition).Delete(&submission).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension), config.SubmissionDir); err != nil {
-			response := gin.H{"Message": "Error: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
+			fmt.Println(err)
+			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}

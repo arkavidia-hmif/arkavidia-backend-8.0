@@ -73,12 +73,6 @@ func DeleteFile(client *storage.Client, filename string, deletePath string) erro
 	defer cancel()
 
 	object := client.Bucket(config.BucketName).Object(fmt.Sprintf("%s/%s", deletePath, filename))
-	// Handles Race Condition
-	attrs, err := object.Attrs(ctx)
-	if err != nil {
-		return err
-	}
-	object = object.If(storage.Conditions{GenerationMatch: attrs.Generation})
 
 	if err := object.Delete(ctx); err != nil {
 		return err
