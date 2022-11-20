@@ -18,6 +18,20 @@ type AddMemberRequest struct {
 	Role           models.MembershipRole              `json:"role"`
 }
 
+type ChangeCareerInterestRequest struct {
+	ParticipantID  uint                               `json:"participant_id"`
+	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
+}
+
+type ChangeRoleRequest struct {
+	ParticipantID uint                  `json:"participant_id"`
+	Role          models.MembershipRole `json:"role"`
+}
+
+type DeleteMemberRequest struct {
+	ParticipantID uint `json:"participant_id"`
+}
+
 func GetMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -91,5 +105,98 @@ func AddMemberHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "SUCCESS", "Data": participant}
 		c.JSON(http.StatusCreated, response)
+	}
+}
+
+func ChangeCareerInterestHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uint)
+
+		request := ChangeCareerInterestRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&membership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldParticipant := models.Participant{Model: gorm.Model{ID: request.ParticipantID}}
+		newParticipant := models.Participant{CareerInterest: request.CareerInterest}
+		if err := db.Find(&oldParticipant).Updates(&newParticipant).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func ChangeRoleInterestHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uint)
+
+		request := ChangeRoleRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldMembership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&oldMembership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		newMembership := models.Membership{Role: request.Role}
+		if err := db.Find(&oldMembership).Updates(&newMembership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func DeleteParticipantHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		teamID := c.MustGet("team_id").(uint)
+
+		request := DeleteMemberRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&membership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		if err := db.Delete(&membership); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
 	}
 }

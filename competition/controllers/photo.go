@@ -27,19 +27,26 @@ type AddPhotoRequest struct {
 }
 
 type DeletePhotoRequest struct {
-	ParticipantID uint                  `form:"participant_id" field:"participant_id"`
-	Type          models.PhotoType      `form:"type" field:"type"`
-	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
+	ParticipantID uint      `form:"participant_id" field:"participant_id"`
+	FileName      uuid.UUID `json:"file_name"`
 }
 
 func GetPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uint)
 
 		request := GetPhotoRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&membership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -62,10 +69,18 @@ func AddPhotoHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uint)
 
 		request := AddPhotoRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&membership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -103,6 +118,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uint)
 
 		request := DeletePhotoRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
@@ -111,8 +127,15 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		photo := models.Photo{ParticipantID: request.ParticipantID, Type: request.Type}
-		if err := db.Create(&photo).Error; err != nil {
+		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		if err := db.Find(&membership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		photo := models.Photo{FileName: request.FileName}
+		if err := db.Delete(&photo).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

@@ -12,5 +12,5 @@ func TeamRoute(route *gin.Engine) {
 	route.POST("/sign-up", controllers.SignUpHandler())
 	route.GET("/get-team-data", middlewares.AuthMiddleware(), controllers.GetTeamHandler())
 	route.PUT("/change-password", middlewares.AuthMiddleware(), controllers.ChangePasswordHandler())
-	route.POST("/competition-registration", middlewares.AuthMiddleware(), controllers.CompetitionRegistration())
+	route.PUT("/competition-registration", middlewares.AuthMiddleware(), controllers.CompetitionRegistration())
 }

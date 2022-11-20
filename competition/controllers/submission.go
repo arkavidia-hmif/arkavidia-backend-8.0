@@ -23,8 +23,7 @@ type AddSubmissionRequest struct {
 }
 
 type DeleteSubmissionRequest struct {
-	Stage models.SubmissionStage `from:"stage" field:"stage"`
-	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
+	FileName uuid.UUID `json:"file_name"`
 }
 
 func GetSubmissionHandler() gin.HandlerFunc {
@@ -102,8 +101,8 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 			return
 		}
 
-		submission := models.Submission{Model: gorm.Model{ID: teamID}, Stage: request.Stage}
-		if err := db.Find(&submission).Error; err != nil {
+		submission := models.Submission{FileName: request.FileName, TeamID: teamID}
+		if err := db.Delete(&submission).Error; err != nil {
 			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

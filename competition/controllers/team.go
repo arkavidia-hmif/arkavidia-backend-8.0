@@ -203,7 +203,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{HashedPassword: hashedPassword}
-		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
+		if err := db.Find(&oldTeam).Updates(&newTeam).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -228,13 +228,13 @@ func CompetitionRegistration() gin.HandlerFunc {
 
 		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
-		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
+		if err := db.Find(&oldTeam).Updates(&newTeam).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		response := gin.H{"Message": "SUCCESS"}
-		c.JSON(http.StatusCreated, response)
+		c.JSON(http.StatusOK, response)
 	}
 }

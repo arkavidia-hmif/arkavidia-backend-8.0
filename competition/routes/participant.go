@@ -10,4 +10,7 @@ import (
 func ParticipantRoute(route *gin.Engine) {
 	route.GET("/get-member-data", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
 	route.POST("/add-member", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
+	route.PUT("/change-career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
+	route.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleInterestHandler())
+	route.DELETE("/delete-participant", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
 }
