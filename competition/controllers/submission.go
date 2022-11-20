@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/models"
@@ -30,9 +31,9 @@ func GetSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := storageConfig.GetStorageConfig()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 
-		condition := models.Submission{TeamID: teamID}
+		condition := models.Submission{Model: gorm.Model{ID: teamID}}
 		submissions := []models.Submission{}
 		if err := db.Where(&condition).Find(&submissions).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
@@ -50,7 +51,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 		request := AddSubmissionRequest{}
 
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
@@ -92,7 +93,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 		request := DeleteSubmissionRequest{}
 
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
@@ -101,7 +102,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 			return
 		}
 
-		submission := models.Submission{TeamID: teamID, Stage: request.Stage}
+		submission := models.Submission{Model: gorm.Model{ID: teamID}, Stage: request.Stage}
 		if err := db.Find(&submission).Error; err != nil {
 			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)

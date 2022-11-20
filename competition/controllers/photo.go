@@ -17,17 +17,17 @@ import (
 )
 
 type GetPhotoRequest struct {
-	ParticipantID uuid.UUID `json:"participant_id"`
+	ParticipantID uint `json:"participant_id"`
 }
 
 type AddPhotoRequest struct {
-	ParticipantID uuid.UUID             `form:"participant_id" field:"participant_id"`
+	ParticipantID uint                  `form:"participant_id" field:"participant_id"`
 	Type          models.PhotoType      `form:"type" field:"type"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }
 
 type DeletePhotoRequest struct {
-	ParticipantID uuid.UUID             `form:"participant_id" field:"participant_id"`
+	ParticipantID uint                  `form:"participant_id" field:"participant_id"`
 	Type          models.PhotoType      `form:"type" field:"type"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }

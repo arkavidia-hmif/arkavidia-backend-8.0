@@ -7,14 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 )
 
 type AuthClaims struct {
 	jwt.RegisteredClaims
-	TeamID uuid.UUID `json:"team_id"`
+	TeamID uint `json:"team_id"`
 }
 
 func AuthMiddleware() gin.HandlerFunc {

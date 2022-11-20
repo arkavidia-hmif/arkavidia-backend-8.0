@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,11 +26,11 @@ func (membershipRole MembershipRole) Value() (driver.Value, error) {
 
 type Membership struct {
 	gorm.Model
-	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;uniqueIndex:membership_index"`
-	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;uniqueIndex:membership_index"`
+	TeamID        uint           `json:"team_id" gorm:"uniqueIndex:membership_index"`
+	ParticipantID uint           `json:"participant_id" gorm:"uniqueIndex:membership_index"`
 	Role          MembershipRole `json:"role" gorm:"type:membership_role;not null"`
-	Team          Team           `json:"team" gorm:"foreignKey:TeamID;references:UUID"`
-	Participant   Participant    `json:"participant" gorm:"foreignKey:ParticipantID;references:UUID"`
+	Team          Team           `json:"team" gorm:"foreignKey:TeamID;references:ID"`
+	Participant   Participant    `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
 }
 
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih
