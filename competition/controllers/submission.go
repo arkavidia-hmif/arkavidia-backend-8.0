@@ -42,7 +42,6 @@ func GetSubmissionHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusOK, response)
-		return
 	}
 }
 
@@ -85,7 +84,6 @@ func AddSubmissionHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": submission, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusCreated, response)
-		return
 	}
 }
 
@@ -118,6 +116,5 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success"}
 		c.JSON(http.StatusOK, response)
-		return
 	}
 }

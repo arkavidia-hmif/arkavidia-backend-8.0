@@ -13,7 +13,7 @@ import (
 )
 
 type AuthClaims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	TeamID uuid.UUID `json:"team_id"`
 }
 

@@ -71,12 +71,13 @@ func SignInHandler() gin.HandlerFunc {
 		}
 
 		authClaims := middlewares.AuthClaims{
-			StandardClaims: jwt.StandardClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
 				Issuer:    config.ApplicationName,
-				ExpiresAt: time.Now().Add(config.LoginExpirationDuration).Unix(),
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
 			TeamID: team.UUID,
 		}
+
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
@@ -94,7 +95,6 @@ func SignInHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": authTokenString}
 		c.JSON(http.StatusCreated, response)
-		return
 	}
 }
 
@@ -146,9 +146,9 @@ func SignUpHandler() gin.HandlerFunc {
 		}
 
 		authClaims := middlewares.AuthClaims{
-			StandardClaims: jwt.StandardClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
 				Issuer:    config.ApplicationName,
-				ExpiresAt: time.Now().Add(config.LoginExpirationDuration).Unix(),
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
 			TeamID: team.UUID,
 		}
@@ -169,7 +169,6 @@ func SignUpHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": authTokenString}
 		c.JSON(http.StatusCreated, response)
-		return
 	}
 }
 
@@ -187,7 +186,6 @@ func GetTeam() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": team}
 		c.JSON(http.StatusOK, response)
-		return
 	}
 }
 
@@ -214,7 +212,6 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success"}
 		c.JSON(http.StatusOK, response)
-		return
 	}
 }
 
@@ -240,6 +237,5 @@ func CompetitionRegistration() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success"}
 		c.JSON(http.StatusCreated, response)
-		return
 	}
 }
