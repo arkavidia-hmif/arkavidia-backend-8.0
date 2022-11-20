@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type ParticipantCareerInterest string
@@ -23,7 +24,8 @@ const (
 )
 
 type Participant struct {
-	ID             uuid.UUID      `json:"participant_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	gorm.Model
+	ParticipantID  uuid.UUID      `json:"participant_id" gorm:"type:uuid;default:gen_random_uuid();unique"`
 	Name           string         `json:"name" gorm:"not null;unique"`
 	Email          string         `json:"email" gorm:"not null;unique"`
 	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:text[];default:array[]::text[];not null"`

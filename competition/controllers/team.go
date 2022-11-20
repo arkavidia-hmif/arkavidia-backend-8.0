@@ -75,7 +75,7 @@ func SignInHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: time.Now().Add(config.LoginExpirationDuration).Unix(),
 			},
-			TeamID: team.ID,
+			TeamID: team.TeamID,
 		}
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
@@ -133,7 +133,7 @@ func SignUpHandler() gin.HandlerFunc {
 				if err := tx.Create(&participant).Error; err != nil {
 					return err
 				}
-				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
+				membership := models.Membership{TeamID: team.TeamID, ParticipantID: participant.ParticipantID, Role: member.Role}
 				if err := tx.Create(&membership).Error; err != nil {
 					return err
 				}
@@ -150,7 +150,7 @@ func SignUpHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: time.Now().Add(config.LoginExpirationDuration).Unix(),
 			},
-			TeamID: team.ID,
+			TeamID: team.TeamID,
 		}
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
@@ -178,7 +178,7 @@ func GetTeam() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uuid.UUID)
 
-		team := models.Team{ID: teamID}
+		team := models.Team{TeamID: teamID}
 		if err := db.Find(&team).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
@@ -204,7 +204,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 			return
 		}
 
-		oldTeam := models.Team{ID: teamID}
+		oldTeam := models.Team{TeamID: teamID}
 		newTeam := models.Team{HashedPassword: hashedPassword}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
@@ -230,7 +230,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 			return
 		}
 
-		oldTeam := models.Team{ID: teamID}
+		oldTeam := models.Team{TeamID: teamID}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}

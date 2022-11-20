@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type TeamCategory string
@@ -14,7 +15,8 @@ const (
 )
 
 type Team struct {
-	ID             uuid.UUID    `json:"team_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	gorm.Model
+	TeamID         uuid.UUID    `json:"team_id" gorm:"type:uuid;default:gen_random_uuid();unique"`
 	Username       string       `json:"username" gorm:"not null;unique"`
 	HashedPassword []byte       `json:"password" gorm:"not null"`
 	TeamName       string       `json:"team_name" gorm:"not null;unique"`

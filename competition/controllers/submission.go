@@ -5,7 +5,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -22,7 +21,7 @@ type AddSubmissionRequest struct {
 	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
 }
 
-type EditSubmissionRequest struct {
+type DeleteSubmissionRequest struct {
 	Stage models.SubmissionStage `from:"stage" field:"stage"`
 	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
 }
@@ -71,7 +70,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		fileUUID := uuid.New()
 		fileExt := filepath.Ext(request.File.Filename)
 
-		submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Timestamp: time.Now(), Stage: request.Stage}
+		submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Stage: request.Stage}
 		if err := db.Create(&submission).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
@@ -96,7 +95,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uuid.UUID)
-		request := EditSubmissionRequest{}
+		request := DeleteSubmissionRequest{}
 
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
