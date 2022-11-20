@@ -16,7 +16,7 @@ const (
 )
 
 func (teamCategory *TeamCategory) Scan(value interface{}) error {
-	*teamCategory = TeamCategory(value.([]byte))
+	*teamCategory = TeamCategory(value.(string))
 	return nil
 }
 

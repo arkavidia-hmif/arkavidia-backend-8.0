@@ -25,7 +25,7 @@ const (
 )
 
 func (participantCareerInterest *ParticipantCareerInterest) Scan(value interface{}) error {
-	*participantCareerInterest = ParticipantCareerInterest(value.([]byte))
+	*participantCareerInterest = ParticipantCareerInterest(value.(string))
 	return nil
 }
 

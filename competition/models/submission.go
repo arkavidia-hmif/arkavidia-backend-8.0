@@ -16,7 +16,7 @@ const (
 )
 
 func (submissionStage *SubmissionStage) Scan(value interface{}) error {
-	*submissionStage = SubmissionStage(value.([]byte))
+	*submissionStage = SubmissionStage(value.(string))
 	return nil
 }
 

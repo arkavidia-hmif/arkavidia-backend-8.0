@@ -16,7 +16,7 @@ const (
 )
 
 func (photoStatus *PhotoStatus) Scan(value interface{}) error {
-	*photoStatus = PhotoStatus(value.([]byte))
+	*photoStatus = PhotoStatus(value.(string))
 	return nil
 }
 
@@ -33,7 +33,7 @@ const (
 )
 
 func (photoType *PhotoType) Scan(value interface{}) error {
-	*photoType = PhotoType(value.([]byte))
+	*photoType = PhotoType(value.(string))
 	return nil
 }
 

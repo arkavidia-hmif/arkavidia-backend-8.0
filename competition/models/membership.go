@@ -16,7 +16,7 @@ const (
 )
 
 func (membershipRole *MembershipRole) Scan(value interface{}) error {
-	*membershipRole = MembershipRole(value.([]byte))
+	*membershipRole = MembershipRole(value.(string))
 	return nil
 }
 
