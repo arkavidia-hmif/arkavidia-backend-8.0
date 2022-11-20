@@ -20,7 +20,7 @@ type MembershipRequest struct {
 func GetMember() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 
 		membership := models.Membership{TeamID: teamID}
 		if err := db.Preload("Memberships").Find(&membership).Error; err != nil {
