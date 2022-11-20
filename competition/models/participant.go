@@ -26,5 +26,5 @@ type Participant struct {
 	ID             uuid.UUID      `json:"participant_id" gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Name           string         `json:"name" gorm:"not null;unique"`
 	Email          string         `json:"email" gorm:"not null;unique"`
-	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:varchar[];default:array[]::varchar[];not null"`
+	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:text[];default:array[]::text[];not null"`
 }

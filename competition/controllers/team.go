@@ -93,7 +93,7 @@ func SignInHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "Success", "Data": authTokenString}
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusCreated, response)
 		return
 	}
 }
@@ -155,20 +155,20 @@ func SignUpHandler() gin.HandlerFunc {
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Errors"}
+			response := gin.H{"Message": "Error: JWT Signing Error!"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		authTokenString, err := json.Marshal(gin.H{"token": signedAuthToken})
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Errors"}
+			response := gin.H{"Message": "Error: JWT Signing Error!"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		response := gin.H{"Message": "Success", "Data": authTokenString}
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusCreated, response)
 		return
 	}
 }
@@ -199,7 +199,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
 		if err != nil {
-			response := gin.H{"Message": "Error: Bcrypt Errors"}
+			response := gin.H{"Message": "Error: Bcrypt Error!"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
@@ -239,7 +239,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "Success"}
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusCreated, response)
 		return
 	}
 }
