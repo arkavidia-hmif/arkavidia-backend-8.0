@@ -45,7 +45,7 @@ type Photo struct {
 	gorm.Model
 	FileName      uuid.UUID   `json:"file_name" gorm:"type:uuid;unique"`
 	FileExtension string      `json:"file_extension" gorm:"not null"`
-	ParticipantID uint        `json:"participant_id" gorm:"type:uuid;not null;uniqueIndex:photo_index"`
+	ParticipantID uint        `json:"participant_id" gorm:"not null;uniqueIndex:photo_index"`
 	Status        PhotoStatus `json:"status" gorm:"type:photo_status;not null"`
 	Type          PhotoType   `json:"type" gorm:"type:photo_type;not null;uniqueIndex:photo_index"`
 	Participant   Participant `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
