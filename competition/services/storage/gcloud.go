@@ -67,8 +67,6 @@ func DownloadFile(client *storage.Client, filename string, downloadPath string) 
 }
 
 func DeleteFile(client *storage.Client, filename string, deletePath string) error {
-	fmt.Println(filename)
-
 	config := storageConfig.GetStorageConfig()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)

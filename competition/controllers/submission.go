@@ -116,8 +116,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName.String(), submission.FileExtension), config.SubmissionDir); err != nil {
-			fmt.Println(err)
+		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", fileUUID.String(), request.FileExtension), config.SubmissionDir); err != nil {
 			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return

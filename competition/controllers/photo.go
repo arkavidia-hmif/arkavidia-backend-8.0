@@ -29,6 +29,7 @@ type AddPhotoRequest struct {
 type DeletePhotoRequest struct {
 	ParticipantID uint   `json:"participant_id"`
 	FileName      string `json:"file_name"`
+	FileExtension string `json:"file_extension"`
 }
 
 func GetPhotoHandler() gin.HandlerFunc {
@@ -151,7 +152,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", photo.FileName.String(), photo.FileExtension), config.PhotoDir); err != nil {
+		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", fileUUID.String(), request.FileExtension), config.PhotoDir); err != nil {
 			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
