@@ -10,7 +10,7 @@ import (
 type TeamCategory string
 
 const (
-	CP         TeamCategory = "cp"
+	CP         TeamCategory = "competitive-programming"
 	Datavidia  TeamCategory = "datavidia"
 	UXVidia    TeamCategory = "uxvidia"
 	Arkalogica TeamCategory = "arkalogica"
