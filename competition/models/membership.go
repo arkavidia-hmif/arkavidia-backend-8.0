@@ -10,9 +10,8 @@ import (
 type MembershipRole string
 
 const (
-	Leader    MembershipRole = "leader"
-	MemberOne MembershipRole = "member-1"
-	MemberTwo MembershipRole = "member-2"
+	Leader MembershipRole = "leader"
+	Member MembershipRole = "member"
 )
 
 func (membershipRole *MembershipRole) Scan(value interface{}) error {

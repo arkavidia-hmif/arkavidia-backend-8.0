@@ -67,8 +67,7 @@ func Init() *gorm.DB {
 		DO $$ BEGIN
 			CREATE TYPE membership_role AS ENUM (
 				'leader',
-				'member-1',
-				'member-2'
+				'member'
 			);
 		EXCEPTION
 			WHEN duplicate_object THEN NULL;
