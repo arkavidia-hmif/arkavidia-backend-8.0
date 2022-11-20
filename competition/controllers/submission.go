@@ -41,7 +41,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": submissions, "URL": fmt.Sprintf("https://storage.googleapis.com/arkavidia-8/%s/", config.PhotoDir)}
+		response := gin.H{"Message": "Success", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusOK, response)
 		return
 	}
@@ -68,34 +68,57 @@ func AddSubmissionHandler() gin.HandlerFunc {
 			return
 		}
 
-		filename := uuid.New()
-		fileext := filepath.Ext(request.File.Filename)
+		fileUUID := uuid.New()
+		fileExt := filepath.Ext(request.File.Filename)
 
-		submission := models.Submission{FileName: filename, FileExtension: fileext, TeamID: teamID, Timestamp: time.Now(), Stage: request.Stage}
+		submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Timestamp: time.Now(), Stage: request.Stage}
 		if err := db.Create(&submission).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request!"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", filename, fileext), config.SubmissionDir, openedFile); err != nil {
+		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
 			response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed!"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": submission, "URL": fmt.Sprintf("https://storage.googleapis.com/arkavidia-8/%s/", config.PhotoDir)}
+		response := gin.H{"Message": "Success", "Data": submission, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusCreated, response)
 		return
 	}
 }
 
-func EditSubmissionHandler() gin.HandlerFunc {
+func DeleteSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// db := databaseService.GetDB()
-		// client := storageService.GetClient()
-		// config := storageConfig.GetStorageConfig()
-		// teamID := c.MustGet("team_id").(uuid.UUID)
-		// request := EditSubmissionRequest{}
+		db := databaseService.GetDB()
+		client := storageService.GetClient()
+		config := storageConfig.GetStorageConfig()
+		teamID := c.MustGet("team_id").(uuid.UUID)
+		request := EditSubmissionRequest{}
+
+		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		submission := models.Submission{TeamID: teamID, Stage: request.Stage}
+		if err := db.Find(&submission).Error; err != nil {
+			response := gin.H{"Message": "Error: Bad Request!"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension), config.PhotoDir); err != nil {
+			response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed!"}
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		response := gin.H{"Message": "Success"}
+		c.JSON(http.StatusOK, response)
+		return
 	}
 }
