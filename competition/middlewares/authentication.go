@@ -20,11 +20,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		config := authConfig.GetAuthConfig()
 
-		if c.FullPath() == "/sign-in" || c.FullPath() == "/sign-up" {
-			c.Next()
-			return
-		}
-
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
 			response := gin.H{"Message": "ERROR: NO TOKEN PROVIDED"}

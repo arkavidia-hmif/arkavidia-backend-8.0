@@ -25,9 +25,9 @@ func main() {
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
-	r.Use(middlewares.AuthMiddleware())
 
 	// Routes
+	routes.NotFoundRoute(r)
 	routes.TeamRoute(r)
 	routes.ParticipantRoute(r)
 	routes.SubmissionRoute(r)

@@ -4,9 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"arkavidia-backend-8.0/competition/controllers"
+	"arkavidia-backend-8.0/competition/middlewares"
 )
 
 func ParticipantRoute(route *gin.Engine) {
-	route.GET("/get-member-data", controllers.GetMemberHandler())
-	route.POST("/add-member", controllers.AddMemberHandler())
+	route.GET("/get-member-data", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
+	route.POST("/add-member", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
 }
