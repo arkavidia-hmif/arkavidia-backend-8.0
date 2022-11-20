@@ -45,6 +45,7 @@ type CompetitionRegistrationQuery struct {
 	TeamCategory models.TeamCategory `form:"competition" field:"competition"`
 }
 
+// SLOW RESPONSE
 func SignInHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -92,6 +93,7 @@ func SignInHandler() gin.HandlerFunc {
 	}
 }
 
+// SLOW RESPONSE
 func SignUpHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -179,6 +181,7 @@ func GetTeamHandler() gin.HandlerFunc {
 	}
 }
 
+// SLOW RESPONSE
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
