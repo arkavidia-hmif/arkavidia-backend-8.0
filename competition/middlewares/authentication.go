@@ -28,7 +28,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
-			response := gin.H{"Message": "Error: No Token Provided!"}
+			response := gin.H{"Message": "ERROR: NO TOKEN PROVIDED"}
 			c.JSON(http.StatusUnauthorized, response)
 			c.Abort()
 			return
@@ -37,7 +37,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		authString := strings.Replace(authHeader, "Bearer ", "", 1)
 		authToken, err := jwt.Parse(authString, func(authToken *jwt.Token) (interface{}, error) {
 			if method, ok := authToken.Method.(*jwt.SigningMethodHMAC); !ok || method != config.JWTSigningMethod {
-				return nil, fmt.Errorf("Error: Signing Method Invalid!")
+				return nil, fmt.Errorf("ERROR: SIGNING METHOD INVALID")
 			}
 			return config.JWTSignatureKey, nil
 		})
@@ -50,7 +50,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, ok := authToken.Claims.(jwt.MapClaims)
 		if !ok || !authToken.Valid {
-			response := gin.H{"Message": "Claims Invalid!"}
+			response := gin.H{"Message": "CLAIMS INVALID"}
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return

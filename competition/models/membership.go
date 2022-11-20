@@ -30,8 +30,8 @@ type Membership struct {
 	TeamID        uuid.UUID      `json:"team_id" gorm:"type:uuid;uniqueIndex:membership_index"`
 	ParticipantID uuid.UUID      `json:"participant_id" gorm:"type:uuid;uniqueIndex:membership_index"`
 	Role          MembershipRole `json:"role" gorm:"type:membership_role;not null"`
-	Team          Team           `json:"-" gorm:"foreignKey:TeamID;references:UUID"`
-	Participant   Participant    `json:"-" gorm:"foreignKey:ParticipantID;references:UUID"`
+	Team          Team           `json:"team" gorm:"foreignKey:TeamID;references:UUID"`
+	Participant   Participant    `json:"participant" gorm:"foreignKey:ParticipantID;references:UUID"`
 }
 
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih
@@ -47,10 +47,10 @@ func (membership *Membership) BeforeSave(tx *gorm.DB) error {
 		for _, membershipB := range newMemberships {
 			if membershipA.TeamID != membershipB.TeamID {
 				if membershipA.Team.TeamCategory == membershipB.Team.TeamCategory {
-					return fmt.Errorf("Error: Invalid Database Operation!")
+					return fmt.Errorf("ERROR: INVALID DATABASE OPERATION")
 				}
 				if membershipA.Role == Leader && membershipB.Role == Leader {
-					return fmt.Errorf("Error: Invalid Database Operation!")
+					return fmt.Errorf("ERROR: INVALID DATABASE OPERATION")
 				}
 			}
 		}

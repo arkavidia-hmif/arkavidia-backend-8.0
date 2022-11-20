@@ -48,5 +48,5 @@ type Photo struct {
 	ParticipantID uuid.UUID   `json:"participant_id" gorm:"type:uuid;not null;uniqueIndex:photo_index"`
 	Status        PhotoStatus `json:"status" gorm:"type:photo_status;not null"`
 	Type          PhotoType   `json:"type" gorm:"type:photo_type;not null;uniqueIndex:photo_index"`
-	Participant   Participant `json:"-" gorm:"foreignKey:ParticipantID;references:UUID"`
+	Participant   Participant `json:"participant" gorm:"foreignKey:ParticipantID;references:UUID"`
 }

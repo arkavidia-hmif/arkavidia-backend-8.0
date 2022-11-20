@@ -52,20 +52,20 @@ func SignInHandler() gin.HandlerFunc {
 		request := SignInRequest{}
 
 		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		team := models.Team{Username: request.Username}
 		if err := db.Find(&team).Error; err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
-			c.JSON(http.StatusBadRequest, response)
+			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
+			c.JSON(http.StatusUnauthorized, response)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, request.Password); err != nil {
-			response := gin.H{"Message": "Error: Invalid Username or Password"}
+			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
 			c.JSON(http.StatusUnauthorized, response)
 			return
 		}
@@ -81,19 +81,19 @@ func SignInHandler() gin.HandlerFunc {
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Errors"}
+			response := gin.H{"Message": "Error: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		authTokenString, err := json.Marshal(gin.H{"token": signedAuthToken})
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Errors"}
+			response := gin.H{"Message": "Error: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": authTokenString}
+		response := gin.H{"Message": "SUCCESS", "Data": authTokenString}
 		c.JSON(http.StatusCreated, response)
 	}
 }
@@ -105,14 +105,14 @@ func SignUpHandler() gin.HandlerFunc {
 		request := SignUpRequest{}
 
 		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
 		if err != nil {
-			response := gin.H{"Message": "Error: Bcrypt Errors"}
+			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
@@ -140,7 +140,7 @@ func SignUpHandler() gin.HandlerFunc {
 			}
 			return nil
 		}); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -155,19 +155,19 @@ func SignUpHandler() gin.HandlerFunc {
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Error!"}
+			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		authTokenString, err := json.Marshal(gin.H{"token": signedAuthToken})
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT Signing Error!"}
+			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": authTokenString}
+		response := gin.H{"Message": "SUCCESS", "Data": authTokenString}
 		c.JSON(http.StatusCreated, response)
 	}
 }
@@ -179,12 +179,12 @@ func GetTeam() gin.HandlerFunc {
 
 		team := models.Team{UUID: teamID}
 		if err := db.Find(&team).Error; err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": team}
+		response := gin.H{"Message": "SUCCESS", "Data": team}
 		c.JSON(http.StatusOK, response)
 	}
 }
@@ -197,7 +197,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
 		if err != nil {
-			response := gin.H{"Message": "Error: Bcrypt Error!"}
+			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
@@ -205,12 +205,12 @@ func ChangePasswordHandler() gin.HandlerFunc {
 		oldTeam := models.Team{UUID: teamID}
 		newTeam := models.Team{HashedPassword: hashedPassword}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success"}
+		response := gin.H{"Message": "SUCCESS"}
 		c.JSON(http.StatusOK, response)
 	}
 }
@@ -222,7 +222,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 		query := CompetitionRegistrationQuery{}
 
 		if err := c.BindQuery(&query); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -230,12 +230,12 @@ func CompetitionRegistration() gin.HandlerFunc {
 		oldTeam := models.Team{UUID: teamID}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success"}
+		response := gin.H{"Message": "SUCCESS"}
 		c.JSON(http.StatusCreated, response)
 	}
 }

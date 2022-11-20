@@ -35,12 +35,12 @@ func GetSubmissionHandler() gin.HandlerFunc {
 		condition := models.Submission{TeamID: teamID}
 		submissions := []models.Submission{}
 		if err := db.Where(&condition).Find(&submissions).Error; err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
+		response := gin.H{"Message": "SUCCESS", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusOK, response)
 	}
 }
@@ -54,14 +54,14 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		request := AddSubmissionRequest{}
 
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		openedFile, err := request.File.Open()
 		if err != nil {
-			response := gin.H{"Message": "Error: File Cannot be Accessed!"}
+			response := gin.H{"Message": "Error: FILE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -71,18 +71,18 @@ func AddSubmissionHandler() gin.HandlerFunc {
 
 		submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Stage: request.Stage}
 		if err := db.Create(&submission).Error; err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
-			response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed!"}
+			response := gin.H{"Message": "Error: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success", "Data": submission, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
+		response := gin.H{"Message": "SUCCESS", "Data": submission, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
 		c.JSON(http.StatusCreated, response)
 	}
 }
@@ -96,25 +96,25 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		request := DeleteSubmissionRequest{}
 
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		submission := models.Submission{TeamID: teamID, Stage: request.Stage}
 		if err := db.Find(&submission).Error; err != nil {
-			response := gin.H{"Message": "Error: Bad Request!"}
+			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
 		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension), config.SubmissionDir); err != nil {
-			response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed!"}
+			response := gin.H{"Message": "Error: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
-		response := gin.H{"Message": "Success"}
+		response := gin.H{"Message": "SUCCESS"}
 		c.JSON(http.StatusOK, response)
 	}
 }
