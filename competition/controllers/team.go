@@ -24,9 +24,9 @@ type SignInRequest struct {
 }
 
 type Member struct {
-	Email string
-	Name  string
-	Role  models.MembershipRole
+	Name  string                `json:"name"`
+	Email string                `json:"email"`
+	Role  models.MembershipRole `json:"role"`
 }
 
 type SignUpRequest struct {
@@ -48,8 +48,8 @@ func SignInHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
-		request := SignInRequest{}
 
+		request := SignInRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -101,8 +101,8 @@ func SignUpHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
-		request := SignUpRequest{}
 
+		request := SignUpRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -192,8 +192,8 @@ func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uint)
-		request := ChangePasswordRequest{}
 
+		request := ChangePasswordRequest{}
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
@@ -218,8 +218,8 @@ func CompetitionRegistration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uint)
-		query := CompetitionRegistrationQuery{}
 
+		query := CompetitionRegistrationQuery{}
 		if err := c.BindQuery(&query); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)

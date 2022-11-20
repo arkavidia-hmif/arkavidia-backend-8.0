@@ -10,10 +10,14 @@ import (
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 )
 
-type PostParticipantRequest struct {
+type AddParticipantRequest struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type ChangeCareerInterestRequest struct {
+	ParticipantID  uint                               `json:"participant_id"`
+	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
 }
 
 func GetParticipantHandler() gin.HandlerFunc {
@@ -47,5 +51,28 @@ func GetParticipantHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "SUCCESS", "Data": participants}
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+func AddParticipantHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		request := AddParticipantRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		participant := models.Participant{Name: request.Name, Email: request.Email}
+		if err := db.Create(&participant).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS", "Data": participant}
+		c.JSON(http.StatusCreated, response)
 	}
 }

@@ -52,8 +52,8 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uint)
-		request := AddSubmissionRequest{}
 
+		request := AddSubmissionRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -94,8 +94,8 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uint)
-		request := DeleteSubmissionRequest{}
 
+		request := DeleteSubmissionRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "Error: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)

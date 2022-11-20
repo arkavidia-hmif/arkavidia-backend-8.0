@@ -36,8 +36,8 @@ func GetPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := storageConfig.GetStorageConfig()
-		request := GetPhotoRequest{}
 
+		request := GetPhotoRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
 			c.JSON(http.StatusBadRequest, response)
@@ -62,8 +62,8 @@ func AddPhotoHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
-		request := AddPhotoRequest{}
 
+		request := AddPhotoRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
 			c.JSON(http.StatusBadRequest, response)
@@ -103,8 +103,8 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		client := storageService.GetClient()
 		config := storageConfig.GetStorageConfig()
-		request := DeletePhotoRequest{}
 
+		request := DeletePhotoRequest{}
 		if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
