@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -24,10 +24,10 @@ type SignInRequest struct {
 }
 
 type Member struct {
-	Name           string                             `json:"name"`
-	Email          string                             `json:"email"`
-	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
-	Role           models.MembershipRole              `json:"role"`
+	Name           string                `json:"name"`
+	Email          string                `json:"email"`
+	CareerInterest pq.StringArray        `json:"career_interest"`
+	Role           models.MembershipRole `json:"role"`
 }
 
 type SignUpRequest struct {
@@ -57,8 +57,9 @@ func SignInHandler() gin.HandlerFunc {
 			return
 		}
 
-		team := models.Team{Username: request.Username}
-		if err := db.Find(&team).Error; err != nil {
+		condition := models.Team{Username: request.Username}
+		team := models.Team{}
+		if err := db.Where(&condition).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
 			c.JSON(http.StatusUnauthorized, response)
 			return
@@ -81,7 +82,7 @@ func SignInHandler() gin.HandlerFunc {
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
-			response := gin.H{"Message": "Error: JWT SIGNING ERROR"}
+			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
@@ -123,13 +124,9 @@ func SignUpHandler() gin.HandlerFunc {
 				return err
 			}
 			for _, member := range request.Members {
-				participant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
-				if err := tx.Find(&participant).Error; err != nil {
-					if !errors.Is(err, gorm.ErrRecordNotFound) {
-						return err
-					}
-				}
-				if err := tx.Create(&participant).Error; err != nil {
+				condition := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
+				participant := models.Participant{}
+				if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 					return err
 				}
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
@@ -176,8 +173,9 @@ func GetTeamHandler() gin.HandlerFunc {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uint)
 
-		team := models.Team{Model: gorm.Model{ID: teamID}}
-		if err := db.Preload("Memberships").Find(&team).Error; err != nil {
+		condition := models.Team{Model: gorm.Model{ID: teamID}}
+		team := models.Team{}
+		if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -203,7 +201,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{HashedPassword: hashedPassword}
-		if err := db.Find(&oldTeam).Updates(&newTeam).Error; err != nil {
+		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -228,7 +226,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 
 		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
-		if err := db.Find(&oldTeam).Updates(&newTeam).Error; err != nil {
+		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

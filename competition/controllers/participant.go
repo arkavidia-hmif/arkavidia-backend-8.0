@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	"arkavidia-backend-8.0/competition/models"
@@ -12,15 +12,15 @@ import (
 )
 
 type AddMemberRequest struct {
-	Name           string                             `json:"name"`
-	Email          string                             `json:"email"`
-	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
-	Role           models.MembershipRole              `json:"role"`
+	Name           string                `json:"name"`
+	Email          string                `json:"email"`
+	CareerInterest pq.StringArray        `json:"career_interest"`
+	Role           models.MembershipRole `json:"role"`
 }
 
 type ChangeCareerInterestRequest struct {
-	ParticipantID  uint                               `json:"participant_id"`
-	CareerInterest []models.ParticipantCareerInterest `json:"career_interest"`
+	ParticipantID  uint           `json:"participant_id"`
+	CareerInterest pq.StringArray `json:"career_interest"`
 }
 
 type ChangeRoleRequest struct {
@@ -48,8 +48,9 @@ func GetMemberHandler() gin.HandlerFunc {
 		participants := []models.Participant{}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			for _, membership := range memberships {
-				participant := models.Participant{Model: gorm.Model{ID: membership.ParticipantID}}
-				if err := tx.Find(&participant).Error; err != nil {
+				condition := models.Participant{Model: gorm.Model{ID: membership.ParticipantID}}
+				participant := models.Participant{}
+				if err := tx.Where(&condition).Find(&participant).Error; err != nil {
 					return err
 				}
 				participant.Memberships = append(participant.Memberships, membership)
@@ -82,13 +83,8 @@ func AddMemberHandler() gin.HandlerFunc {
 		participant := models.Participant{}
 		membership := models.Membership{}
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			participant = models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterest}
-			if err := tx.Find(&participant).Error; err != nil {
-				if !errors.Is(err, gorm.ErrRecordNotFound) {
-					return err
-				}
-			}
-			if err := tx.Create(&participant).Error; err != nil {
+			condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterest}
+			if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 				return err
 			}
 			membership = models.Membership{TeamID: teamID, ParticipantID: participant.ID, Role: request.Role}
@@ -120,8 +116,9 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 			return
 		}
 
-		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&membership).Error; err != nil {
+		condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		membership := models.Membership{}
+		if err := db.Where(&condition).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -129,7 +126,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 
 		oldParticipant := models.Participant{Model: gorm.Model{ID: request.ParticipantID}}
 		newParticipant := models.Participant{CareerInterest: request.CareerInterest}
-		if err := db.Find(&oldParticipant).Updates(&newParticipant).Error; err != nil {
+		if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -153,14 +150,8 @@ func ChangeRoleInterestHandler() gin.HandlerFunc {
 		}
 
 		oldMembership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&oldMembership).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
 		newMembership := models.Membership{Role: request.Role}
-		if err := db.Find(&oldMembership).Updates(&newMembership).Error; err != nil {
+		if err := db.Where(&oldMembership).Updates(&newMembership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -183,8 +174,9 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 			return
 		}
 
-		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&membership).Error; err != nil {
+		condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		membership := models.Membership{}
+		if err := db.Where(&condition).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

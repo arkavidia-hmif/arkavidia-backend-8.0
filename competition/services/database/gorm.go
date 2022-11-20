@@ -18,7 +18,7 @@ func Init() *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d", config.Host, config.User, config.Password, config.DBName, config.Port)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		panic(err)

@@ -12,5 +12,5 @@ func ParticipantRoute(route *gin.Engine) {
 	route.POST("/add-member", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
 	route.PUT("/change-career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
 	route.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleInterestHandler())
-	route.DELETE("/delete-participant", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
+	route.DELETE("/delete-member", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
 }

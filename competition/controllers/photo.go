@@ -44,16 +44,17 @@ func GetPhotoHandler() gin.HandlerFunc {
 			return
 		}
 
+		condition1 := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
 		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&membership).Error; err != nil {
+		if err := db.Where(&condition1).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		condition := models.Photo{ParticipantID: request.ParticipantID}
+		condition2 := models.Photo{ParticipantID: request.ParticipantID}
 		photos := []models.Photo{}
-		if err := db.Where(&condition).Find(&photos).Error; err != nil {
+		if err := db.Where(&condition2).Find(&photos).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -78,8 +79,9 @@ func AddPhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&membership).Error; err != nil {
+		condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		membership := models.Membership{}
+		if err := db.Where(&condition).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -127,8 +129,9 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		if err := db.Find(&membership).Error; err != nil {
+		condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		membership := models.Membership{}
+		if err := db.Where(&condition).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
