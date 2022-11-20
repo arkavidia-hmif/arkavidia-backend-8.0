@@ -32,6 +32,8 @@ type Team struct {
 	HashedPassword []byte       `json:"password" gorm:"not null"`
 	TeamName       string       `json:"team_name" gorm:"not null;unique"`
 	TeamCategory   TeamCategory `json:"team_category" gorm:"type:team_category"`
+	Memberships    []Membership `json:"memberships"`
+	Submissions    []Submission `json:"submissions"`
 }
 
 func (team *Team) BeforeCreate(tx *gorm.DB) error {

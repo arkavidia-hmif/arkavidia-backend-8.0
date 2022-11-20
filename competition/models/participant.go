@@ -39,6 +39,8 @@ type Participant struct {
 	Name           string                      `json:"name" gorm:"not null;unique"`
 	Email          string                      `json:"email" gorm:"not null;unique"`
 	CareerInterest []ParticipantCareerInterest `json:"career_interest" gorm:"type:participant_career_interest[];default:array[]::participant_career_interest[];not null"`
+	Memberships    []Membership                `json:"memberships"`
+	Photos         []Photo                     `json:"photos"`
 }
 
 func (participant *Participant) BeforeCreate(tx *gorm.DB) error {

@@ -178,7 +178,7 @@ func GetTeam() gin.HandlerFunc {
 		teamID := c.MustGet("team_id").(uuid.UUID)
 
 		team := models.Team{UUID: teamID}
-		if err := db.Find(&team).Error; err != nil {
+		if err := db.Preload("Memberships").Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
