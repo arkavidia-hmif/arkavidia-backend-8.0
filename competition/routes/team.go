@@ -9,7 +9,7 @@ import (
 func TeamRoute(route *gin.Engine) {
 	route.POST("/sign-in", controllers.SignInHandler())
 	route.POST("/sign-up", controllers.SignUpHandler())
-	route.GET("/get-team-data", controllers.GetTeam())
+	route.GET("/get-team-data", controllers.GetTeamHandler())
 	route.PUT("/change-password", controllers.ChangePasswordHandler())
 	route.POST("/competition-registration", controllers.CompetitionRegistration())
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -75,7 +74,7 @@ func SignInHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
-			TeamID: team.UUID,
+			TeamID: team.ID,
 		}
 
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
@@ -133,7 +132,7 @@ func SignUpHandler() gin.HandlerFunc {
 				if err := tx.Create(&participant).Error; err != nil {
 					return err
 				}
-				membership := models.Membership{TeamID: team.UUID, ParticipantID: participant.UUID, Role: member.Role}
+				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
 				if err := tx.Create(&membership).Error; err != nil {
 					return err
 				}
@@ -150,7 +149,7 @@ func SignUpHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
-			TeamID: team.UUID,
+			TeamID: team.ID,
 		}
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
@@ -172,12 +171,12 @@ func SignUpHandler() gin.HandlerFunc {
 	}
 }
 
-func GetTeam() gin.HandlerFunc {
+func GetTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 
-		team := models.Team{UUID: teamID}
+		team := models.Team{Model: gorm.Model{ID: teamID}}
 		if err := db.Preload("Memberships").Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -192,7 +191,7 @@ func GetTeam() gin.HandlerFunc {
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 		request := ChangePasswordRequest{}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, rand.Intn(bcrypt.MaxCost-bcrypt.MinCost)+bcrypt.MinCost)
@@ -202,7 +201,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 			return
 		}
 
-		oldTeam := models.Team{UUID: teamID}
+		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{HashedPassword: hashedPassword}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
@@ -218,7 +217,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 func CompetitionRegistration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uuid.UUID)
+		teamID := c.MustGet("team_id").(uint)
 		query := CompetitionRegistrationQuery{}
 
 		if err := c.BindQuery(&query); err != nil {
@@ -227,7 +226,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 			return
 		}
 
-		oldTeam := models.Team{UUID: teamID}
+		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
 		if err := db.Find(&oldTeam).Updates(&newTeam); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}

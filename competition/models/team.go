@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql/driver"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,16 +26,10 @@ func (teamCategory TeamCategory) Value() (driver.Value, error) {
 
 type Team struct {
 	gorm.Model
-	UUID           uuid.UUID    `json:"team_id" gorm:"type:uuid;not null;unique"`
 	Username       string       `json:"username" gorm:"not null;unique"`
 	HashedPassword []byte       `json:"password" gorm:"not null"`
 	TeamName       string       `json:"team_name" gorm:"not null;unique"`
 	TeamCategory   TeamCategory `json:"team_category" gorm:"type:team_category"`
 	Memberships    []Membership `json:"memberships"`
 	Submissions    []Submission `json:"submissions"`
-}
-
-func (team *Team) BeforeCreate(tx *gorm.DB) error {
-	team.UUID = uuid.New()
-	return nil
 }
