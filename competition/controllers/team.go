@@ -87,14 +87,7 @@ func SignInHandler() gin.HandlerFunc {
 			return
 		}
 
-		authTokenString, err := json.Marshal(gin.H{"token": signedAuthToken})
-		if err != nil {
-			response := gin.H{"Message": "Error: JWT SIGNING ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS", "Data": authTokenString}
+		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}
 		c.JSON(http.StatusCreated, response)
 	}
 }

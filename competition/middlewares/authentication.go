@@ -28,8 +28,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		authString := strings.Replace(authHeader, "Bearer ", "", 1)
-		authToken, err := jwt.Parse(authString, func(authToken *jwt.Token) (interface{}, error) {
+		authString := strings.Replace(authHeader, "Bearer ", "", -1)
+		authClaim := AuthClaims{}
+		authToken, err := jwt.ParseWithClaims(authString, &authClaim, func(authToken *jwt.Token) (interface{}, error) {
 			if method, ok := authToken.Method.(*jwt.SigningMethodHMAC); !ok || method != config.JWTSigningMethod {
 				return nil, fmt.Errorf("ERROR: SIGNING METHOD INVALID")
 			}
@@ -41,16 +42,14 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		claims, ok := authToken.Claims.(jwt.MapClaims)
-		if !ok || !authToken.Valid {
+		if !authToken.Valid {
 			response := gin.H{"Message": "CLAIMS INVALID"}
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
 
-		c.Set("team_id", claims["team_id"])
+		c.Set("team_id", authClaim.TeamID)
 		c.Next()
 	}
 }
