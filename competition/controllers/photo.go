@@ -119,8 +119,6 @@ func AddPhotoHandler() gin.HandlerFunc {
 func DeletePhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		client := storageService.GetClient()
-		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uint)
 
 		request := DeletePhotoRequest{}
@@ -149,12 +147,6 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		if err := db.Where(&condition2).Delete(&photo).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		if err := storageService.DeleteFile(client, fmt.Sprintf("%s%s", fileUUID.String(), request.FileExtension), config.PhotoDir); err != nil {
-			response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
-			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 

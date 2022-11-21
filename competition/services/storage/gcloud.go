@@ -46,6 +46,7 @@ func UploadFile(client *storage.Client, filename string, uploadPath string, cont
 	return nil
 }
 
+// Currently Unused
 func DownloadFile(client *storage.Client, filename string, downloadPath string) (io.Writer, error) {
 	config := storageConfig.GetStorageConfig()
 
@@ -66,6 +67,7 @@ func DownloadFile(client *storage.Client, filename string, downloadPath string) 
 	return file, nil
 }
 
+// Currently Unused
 func DeleteFile(client *storage.Client, filename string, deletePath string) error {
 	config := storageConfig.GetStorageConfig()
 
