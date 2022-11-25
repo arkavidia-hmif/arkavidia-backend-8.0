@@ -30,6 +30,7 @@ const (
 	Pribadi             PhotoType = "pribadi"
 	KartuPelajar        PhotoType = "kartu-pelajar"
 	BuktiMahasiswaAktif PhotoType = "bukti-mahasiswa-aktif"
+	BuktiPembayaran 		PhotoType = "bukti-pembayaran"
 )
 
 func (photoType *PhotoType) Scan(value interface{}) error {
