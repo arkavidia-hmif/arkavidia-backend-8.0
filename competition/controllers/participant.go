@@ -18,13 +18,19 @@ type AddMemberRequest struct {
 	Role           models.MembershipRole `json:"role" binding:"required"`
 }
 
+type ChangeCareerInterestQuery struct {
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+}
+
 type ChangeCareerInterestRequest struct {
-	ParticipantID  uint           `json:"participant_id" binding:"required"`
 	CareerInterest pq.StringArray `json:"career_interest" binding:"required"`
 }
 
+type ChangeRoleQuery struct {
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+}
+
 type ChangeRoleRequest struct {
-	ParticipantID uint                  `json:"participant_id"`
 	Role          models.MembershipRole `json:"role"`
 }
 
@@ -116,7 +122,14 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 			return
 		}
 
-		condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		query := ChangeCareerInterestQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		condition := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 		membership := models.Membership{}
 		if err := db.Where(&condition).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
@@ -124,7 +137,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 			return
 		}
 
-		oldParticipant := models.Participant{Model: gorm.Model{ID: request.ParticipantID}}
+		oldParticipant := models.Participant{Model: gorm.Model{ID: query.ParticipantID}}
 		newParticipant := models.Participant{CareerInterest: request.CareerInterest}
 		if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
@@ -149,7 +162,14 @@ func ChangeRoleInterestHandler() gin.HandlerFunc {
 			return
 		}
 
-		oldMembership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		query := ChangeRoleQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldMembership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 		newMembership := models.Membership{Role: request.Role}
 		if err := db.Where(&oldMembership).Updates(&newMembership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
