@@ -110,9 +110,9 @@ func SignUpHandler() gin.HandlerFunc {
 		}
 
 		// validate username exist
-		condition := models.Team{Username: request.Username}
+		condition1 := models.Team{Username: request.Username}
 		team := models.Team{}
-		if err := db.Where(&condition).Find(&team).Error; err != nil {
+		if err := db.Where(&condition1).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -124,9 +124,9 @@ func SignUpHandler() gin.HandlerFunc {
 		}
 
 		// validate team name exist
-		condition = models.Team{TeamName: request.TeamName}
+		condition2 := models.Team{TeamName: request.TeamName}
 		team = models.Team{}
-		if err := db.Where(&condition).Find(&team).Error; err != nil {
+		if err := db.Where(&condition2).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -144,8 +144,9 @@ func SignUpHandler() gin.HandlerFunc {
 			}
 
 			for _, member := range request.Members {
-				participant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
-				if err := tx.FirstOrCreate(&participant).Error; err != nil {
+				condition3 := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
+				participant := models.Participant{}
+				if err := tx.FirstOrCreate(&participant, &condition3).Error; err != nil {
 					return err
 				}
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}

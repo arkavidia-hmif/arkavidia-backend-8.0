@@ -35,22 +35,30 @@ type Membership struct {
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih
 // dengan jenis lomba yang sama atau memiliki role leader lebih dari satu kali
 func (membership *Membership) BeforeSave(tx *gorm.DB) error {
-	condition := Membership{ParticipantID: membership.ParticipantID}
-	newMemberships := []Membership{}
-	if err := tx.Where(&condition).Find(&newMemberships).Error; err != nil {
+	condition1 := Membership{ParticipantID: membership.ParticipantID}
+	oldMemberships1 := []Membership{}
+	if err := tx.Where(&condition1).Find(&oldMemberships1).Error; err != nil {
 		return err
 	}
 
-	for _, membershipA := range newMemberships {
-		for _, membershipB := range newMemberships {
-			if membershipA.TeamID != membershipB.TeamID {
-				if membershipA.Team.TeamCategory == membershipB.Team.TeamCategory && membershipA.Team.TeamCategory != "" && membershipB.Team.TeamCategory != "" {
-					return fmt.Errorf("ERROR: CANNOT PARTICIPATE MORE THAN ONCE")
-				}
-				if membershipA.Role == Leader && membershipB.Role == Leader {
-					return fmt.Errorf("ERROR: INELIGIBLE LEADER")
-				}
-			}
+	for _, oldMembership := range oldMemberships1 {
+		if oldMembership.Team.TeamCategory != "" && oldMembership.Team.TeamCategory == membership.Team.TeamCategory {
+			return fmt.Errorf("ERROR: CANNOT PARTICIPATE MORE THAN ONCE")
+		}
+		if oldMembership.Role == Leader && membership.Role == Leader {
+			return fmt.Errorf("ERROR: INELIGIBLE LEADER")
+		}
+	}
+
+	condition2 := Membership{ParticipantID: membership.TeamID}
+	oldMemberships2 := []Membership{}
+	if err := tx.Where(&condition2).Find(&oldMemberships2).Error; err != nil {
+		return err
+	}
+
+	for _, oldMembership := range oldMemberships2 {
+		if oldMembership.Role == Leader && membership.Role == Leader {
+			return fmt.Errorf("ERROR: INELIGIBLE LEADER")
 		}
 	}
 
