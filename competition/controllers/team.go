@@ -22,10 +22,10 @@ type SignInRequest struct {
 }
 
 type Member struct {
-	Name           string                `json:"name"`
-	Email          string                `json:"email"`
-	CareerInterest pq.StringArray        `json:"career_interest"`
-	Role           models.MembershipRole `json:"role"`
+	Name           string                `json:"name" binding:"required"`
+	Email          string                `json:"email" binding:"required"`
+	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
+	Role           models.MembershipRole `json:"role" binding:"required"`
 }
 
 type SignUpRequest struct {
@@ -36,11 +36,11 @@ type SignUpRequest struct {
 }
 
 type ChangePasswordRequest struct {
-	Password []byte `json:"password"`
+	Password []byte `json:"password" binding:"required"`
 }
 
 type CompetitionRegistrationQuery struct {
-	TeamCategory models.TeamCategory `form:"competition" field:"competition"`
+	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required"`
 }
 
 func SignInHandler() gin.HandlerFunc {

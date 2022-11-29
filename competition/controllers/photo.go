@@ -21,15 +21,15 @@ type GetPhotoRequest struct {
 }
 
 type AddPhotoRequest struct {
-	ParticipantID uint                  `form:"participant_id" field:"participant_id"`
-	Type          models.PhotoType      `form:"type" field:"type"`
+	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required"`
+	Type          models.PhotoType      `form:"type" field:"type" binding:"required"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }
 
 type DeletePhotoRequest struct {
-	ParticipantID uint   `json:"participant_id"`
-	FileName      string `json:"file_name"`
-	FileExtension string `json:"file_extension"`
+	ParticipantID uint   `json:"participant_id" binding:"required"`
+	FileName      string `json:"file_name" binding:"required"`
+	FileExtension string `json:"file_extension" binding:"required"`
 }
 
 func GetPhotoHandler() gin.HandlerFunc {

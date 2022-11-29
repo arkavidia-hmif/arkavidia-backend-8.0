@@ -12,15 +12,15 @@ import (
 )
 
 type AddMemberRequest struct {
-	Name           string                `json:"name"`
-	Email          string                `json:"email"`
-	CareerInterest pq.StringArray        `json:"career_interest"`
-	Role           models.MembershipRole `json:"role"`
+	Name           string                `json:"name" binding:"required"`
+	Email          string                `json:"email" binding:"required"`
+	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
+	Role           models.MembershipRole `json:"role" binding:"required"`
 }
 
 type ChangeCareerInterestRequest struct {
-	ParticipantID  uint           `json:"participant_id"`
-	CareerInterest pq.StringArray `json:"career_interest"`
+	ParticipantID  uint           `json:"participant_id" binding:"required"`
+	CareerInterest pq.StringArray `json:"career_interest" binding:"required"`
 }
 
 type ChangeRoleRequest struct {
