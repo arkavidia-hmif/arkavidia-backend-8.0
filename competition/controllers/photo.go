@@ -17,7 +17,7 @@ import (
 )
 
 type GetPhotoRequest struct {
-	ParticipantID uint `json:"participant_id"`
+	ParticipantID uint `json:"participant_id" binding:"required"`
 }
 
 type AddPhotoRequest struct {
