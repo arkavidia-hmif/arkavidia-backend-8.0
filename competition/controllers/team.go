@@ -43,7 +43,6 @@ type CompetitionRegistrationQuery struct {
 	TeamCategory models.TeamCategory `form:"competition" field:"competition"`
 }
 
-// SLOW RESPONSE
 func SignInHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -91,7 +90,6 @@ func SignInHandler() gin.HandlerFunc {
 	}
 }
 
-// SLOW RESPONSE
 func SignUpHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -114,18 +112,28 @@ func SignUpHandler() gin.HandlerFunc {
 		// validate username exist
 		condition := models.Team{Username: request.Username}
 		team := models.Team{}
-		if err := db.Where(&condition).Find(&team).Error; err != nil || team.Username != "" {
+		if err := db.Where(&condition).Find(&team).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+		if team.Username != "" {
 			response := gin.H{"Message": "ERROR: USERNAME EXISTED"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		// validate teamname exist
+		// validate team name exist
 		condition = models.Team{TeamName: request.TeamName}
 		team = models.Team{}
-		if err := db.Where(&condition).Find(&team).Error; err != nil || team.TeamName != "" {
+		if err := db.Where(&condition).Find(&team).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+		if team.TeamName != "" {
 			response := gin.H{"Message": "ERROR: TEAMNAME EXISTED"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -136,38 +144,8 @@ func SignUpHandler() gin.HandlerFunc {
 			}
 
 			for _, member := range request.Members {
-
-				// check if member is already a leader in another team
-				if member.Role == "leader" {
-					// get participant_id if existed by email
-					condition := models.Participant{Email: member.Email}
-					participant := models.Participant{}
-					if err := db.Where(&condition).Find(&participant).Error; err != nil {
-						response := gin.H{"Message": "ERROR: UNEXPECTED ERROR"}
-						c.JSON(http.StatusBadRequest, response)
-						return err
-					}
-
-					// get membership by participant ID
-					memberCondition := models.Membership{ParticipantID: participant.ID, Role: "leader"}
-					membership := models.Membership{}
-					if err := db.Where(&memberCondition).Find(&membership).Error; err != nil {
-						response := gin.H{"Message": "ERROR: UNEXPECTED ERROR"}
-						c.JSON(http.StatusBadRequest, response)
-						return err
-					}
-
-					// if has a leader role in another team, then ineligble leader
-					// TODO: return tx.Error doesn't break loop 
-					if membership.ID != 0 {
-						response := gin.H{"Message": "ERROR: INELIGIBLE LEADER"}
-						c.JSON(http.StatusBadRequest, response)
-						return tx.Error
-					}
-				}
-
 				participant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
-				if err := tx.Create(&participant).Error; err != nil {
+				if err := tx.FirstOrCreate(&participant).Error; err != nil {
 					return err
 				}
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
@@ -177,7 +155,7 @@ func SignUpHandler() gin.HandlerFunc {
 			}
 			return nil
 		}); err != nil {
-			response := gin.H{"Message": "ERROR: MEMBER REQUEST ERROR"}
+			response := gin.H{"Message": err.Error()}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
