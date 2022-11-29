@@ -17,33 +17,32 @@ import (
 )
 
 type SignInRequest struct {
-	Username string `json:"username"`
-	Password []byte `json:"password"`
+	Username string `json:"username" binding:"required"`
+	Password []byte `json:"password" binding:"required"`
 }
 
 type Member struct {
-	Name           string                `json:"name"`
-	Email          string                `json:"email"`
-	CareerInterest pq.StringArray        `json:"career_interest"`
-	Role           models.MembershipRole `json:"role"`
+	Name           string                `json:"name" binding:"required"`
+	Email          string                `json:"email" binding:"required"`
+	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
+	Role           models.MembershipRole `json:"role" binding:"required"`
 }
 
 type SignUpRequest struct {
-	Username string   `json:"username"`
-	Password []byte   `json:"password"`
-	TeamName string   `json:"team_name"`
-	Members  []Member `json:"member_list"`
+	Username string   `json:"username" binding:"required"`
+	Password []byte   `json:"password" binding:"required"`
+	TeamName string   `json:"team_name" binding:"required"`
+	Members  []Member `json:"member_list" binding:"required"`
 }
 
 type ChangePasswordRequest struct {
-	Password []byte `json:"password"`
+	Password []byte `json:"password" binding:"required"`
 }
 
 type CompetitionRegistrationQuery struct {
-	TeamCategory models.TeamCategory `form:"competition" field:"competition"`
+	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required"`
 }
 
-// SLOW RESPONSE
 func SignInHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -51,7 +50,7 @@ func SignInHandler() gin.HandlerFunc {
 
 		request := SignInRequest{}
 		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -91,7 +90,6 @@ func SignInHandler() gin.HandlerFunc {
 	}
 }
 
-// SLOW RESPONSE
 func SignUpHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -99,7 +97,7 @@ func SignUpHandler() gin.HandlerFunc {
 
 		request := SignUpRequest{}
 		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -111,15 +109,44 @@ func SignUpHandler() gin.HandlerFunc {
 			return
 		}
 
-		team := models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName}
+		// validate username exist
+		condition1 := models.Team{Username: request.Username}
+		team := models.Team{}
+		if err := db.Where(&condition1).Find(&team).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+		if team.Username != "" {
+			response := gin.H{"Message": "ERROR: USERNAME EXISTED"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		// validate team name exist
+		condition2 := models.Team{TeamName: request.TeamName}
+		team = models.Team{}
+		if err := db.Where(&condition2).Find(&team).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+		if team.TeamName != "" {
+			response := gin.H{"Message": "ERROR: TEAMNAME EXISTED"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		team = models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
 			}
+
 			for _, member := range request.Members {
-				condition := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
+				condition3 := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
 				participant := models.Participant{}
-				if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
+				if err := tx.FirstOrCreate(&participant, &condition3).Error; err != nil {
 					return err
 				}
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
@@ -129,7 +156,7 @@ func SignUpHandler() gin.HandlerFunc {
 			}
 			return nil
 		}); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			response := gin.H{"Message": err.Error()}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}

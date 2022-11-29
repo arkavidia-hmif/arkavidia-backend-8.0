@@ -16,20 +16,20 @@ import (
 	storageService "arkavidia-backend-8.0/competition/services/storage"
 )
 
-type GetPhotoRequest struct {
-	ParticipantID uint `json:"participant_id"`
+type GetPhotoQuery struct {
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
 }
 
 type AddPhotoRequest struct {
-	ParticipantID uint                  `form:"participant_id" field:"participant_id"`
-	Type          models.PhotoType      `form:"type" field:"type"`
+	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required"`
+	Type          models.PhotoType      `form:"type" field:"type" binding:"required"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }
 
 type DeletePhotoRequest struct {
-	ParticipantID uint   `json:"participant_id"`
-	FileName      string `json:"file_name"`
-	FileExtension string `json:"file_extension"`
+	ParticipantID uint   `json:"participant_id" binding:"required"`
+	FileName      string `json:"file_name" binding:"required"`
+	FileExtension string `json:"file_extension" binding:"required"`
 }
 
 func GetPhotoHandler() gin.HandlerFunc {
@@ -38,22 +38,22 @@ func GetPhotoHandler() gin.HandlerFunc {
 		config := storageConfig.GetStorageConfig()
 		teamID := c.MustGet("team_id").(uint)
 
-		request := GetPhotoRequest{}
-		if err := c.BindJSON(&request); err != nil {
+		query := GetPhotoQuery{}
+		if err := c.BindQuery(&query); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		condition1 := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
-		membership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		condition1 := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
+		membership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 		if err := db.Where(&condition1).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		condition2 := models.Photo{ParticipantID: request.ParticipantID}
+		condition2 := models.Photo{ParticipantID: query.ParticipantID}
 		photos := []models.Photo{}
 		if err := db.Where(&condition2).Find(&photos).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}

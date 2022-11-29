@@ -17,13 +17,13 @@ import (
 )
 
 type AddSubmissionRequest struct {
-	Stage models.SubmissionStage `form:"stage" field:"stage"`
+	Stage models.SubmissionStage `form:"stage" field:"stage" binding:"required"`
 	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
 }
 
 type DeleteSubmissionRequest struct {
-	FileName      string `json:"file_name"`
-	FileExtension string `json:"file_extension"`
+	FileName      string `json:"file_name" binding:"required"`
+	FileExtension string `json:"file_extension" binding:"required"`
 }
 
 func GetSubmissionHandler() gin.HandlerFunc {
