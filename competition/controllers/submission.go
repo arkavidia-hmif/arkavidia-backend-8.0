@@ -65,6 +65,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
+		defer openedFile.Close()
 
 		fileUUID := uuid.New()
 		fileExt := filepath.Ext(request.File.Filename)
