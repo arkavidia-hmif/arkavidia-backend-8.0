@@ -8,7 +8,7 @@ import (
 )
 
 func SendMailToClient(mailParameters broker.MailParameters) error {
-	// TODO: Tambahkan SMTP pake lib gomail di sini @StaffBE
+	// TODO: Tambahkan SMTP menggunakan lib gomail
 	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-send-email.html
 
 	return nil

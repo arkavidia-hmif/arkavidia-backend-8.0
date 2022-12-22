@@ -11,6 +11,9 @@ import (
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 )
 
+// TODO: Tambahkan duplicate function call suppression mechanism menggunakan lib Singleflight
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-singleflight.html
+
 var currentClient *storage.Client = nil
 
 func Init() *storage.Client {
