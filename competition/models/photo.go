@@ -11,9 +11,9 @@ import (
 type PhotoStatus string
 
 const (
-	WaitingForVerification PhotoStatus = "waiting-for-verification"
-	Verified               PhotoStatus = "verified"
-	Declined               PhotoStatus = "declined"
+	WaitingForApproval PhotoStatus = "waiting-for-approval"
+	Approved           PhotoStatus = "approved"
+	Denied             PhotoStatus = "denied"
 )
 
 func (photoStatus *PhotoStatus) Scan(value interface{}) error {
@@ -55,14 +55,14 @@ type Photo struct {
 	ApprovedBy    Admin       `json:"admin" gorm:"foreignKey:AdminID;references:ID"`
 }
 
-// Menambahkan constraint untuk mengecek apakah terdapat photos yang telah diapprove namun admin tidak tercatat
-// atau photos yang belum diapprove namun admin tercatat
+// Menambahkan constraint untuk mengecek apakah terdapat photo yang telah diapprove namun admin tidak tercatat
+// atau photo yang belum diapprove namun admin tercatat
 func (photo *Photo) BeforeSave(tx *gorm.DB) error {
-	if photo.Status != WaitingForVerification && photo.AdminID == 0 {
+	if photo.Status != WaitingForApproval && photo.AdminID == 0 {
 		return fmt.Errorf("ERROR: ADMIN MUST BE RECORDED")
 	}
 
-	if photo.Status == WaitingForVerification && photo.AdminID != 0 {
+	if photo.Status == WaitingForApproval && photo.AdminID != 0 {
 		return fmt.Errorf("ERROR: STATUS MUST BE RECORDED")
 	}
 

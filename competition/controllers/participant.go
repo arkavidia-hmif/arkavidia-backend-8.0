@@ -39,6 +39,14 @@ type ChangeRoleRequest struct {
 	Role models.MembershipRole `json:"role" binding:"required"`
 }
 
+type ChangeStatusParticipantQuery struct {
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+}
+
+type ChangeStatusParticipantRequest struct {
+	Status models.ParticipantStatus `json:"status" binding:"required"`
+}
+
 type DeleteMemberRequest struct {
 	ParticipantID uint `json:"participant_id" binding:"required"`
 }
@@ -120,7 +128,7 @@ func AddMemberHandler() gin.HandlerFunc {
 		participant := models.Participant{}
 		membership := models.Membership{}
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterest}
+			condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterest, Status: models.WaitingForVerification}
 			if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 				return err
 			}
@@ -181,7 +189,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 	}
 }
 
-func ChangeRoleInterestHandler() gin.HandlerFunc {
+func ChangeRoleHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		teamID := c.MustGet("team_id").(uint)
@@ -203,6 +211,37 @@ func ChangeRoleInterestHandler() gin.HandlerFunc {
 		oldMembership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 		newMembership := models.Membership{Role: request.Role}
 		if err := db.Where(&oldMembership).Updates(&newMembership).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func ChangeStatusParticipantHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		request := ChangeStatusParticipantRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		query := ChangeStatusParticipantQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldParticipant := models.Participant{Model: gorm.Model{ID: query.ParticipantID}}
+		newParticipant := models.Participant{Status: request.Status}
+		if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

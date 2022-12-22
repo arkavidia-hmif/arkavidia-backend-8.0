@@ -16,4 +16,5 @@ func TeamRoute(route *gin.Engine) {
 	groupTeam.POST("/sign-up", controllers.SignUpTeamHandler())
 	groupTeam.PUT("/change-password", middlewares.AuthMiddleware(), controllers.ChangePasswordHandler())
 	groupTeam.PUT("/competition-registration", middlewares.AuthMiddleware(), controllers.CompetitionRegistration())
+	groupTeam.PUT("/change-status", middlewares.AdminMiddleware(), controllers.ChangeStatusTeamHandler())
 }

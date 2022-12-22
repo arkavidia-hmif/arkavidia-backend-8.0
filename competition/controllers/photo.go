@@ -32,11 +32,11 @@ type AddPhotoRequest struct {
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }
 
-type ChangeStatusQuery struct {
+type ChangeStatusPhotoQuery struct {
 	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required"`
 }
 
-type ChangeStatusRequest struct {
+type ChangeStatusPhotoRequest struct {
 	Status models.PhotoStatus `json:"status" binding:"required"`
 }
 
@@ -59,17 +59,17 @@ func GetPhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		condition1 := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
+		conditionMembership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 		membership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
-		if err := db.Where(&condition1).Find(&membership).Error; err != nil {
+		if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		condition2 := models.Photo{ParticipantID: query.ParticipantID}
+		conditionPhoto := models.Photo{ParticipantID: query.ParticipantID}
 		photos := []models.Photo{}
-		if err := db.Where(&condition2).Find(&photos).Error; err != nil {
+		if err := db.Where(&conditionPhoto).Find(&photos).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -139,7 +139,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 		fileUUID := uuid.New()
 		fileExt := filepath.Ext(request.File.Filename)
 
-		photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForVerification, Type: request.Type}
+		photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForApproval, Type: request.Type}
 		if err := db.Create(&photo).Error; err != nil {
 			response := gin.H{"Message": "Error: Bad Request"}
 			c.JSON(http.StatusBadRequest, response)
@@ -157,19 +157,19 @@ func AddPhotoHandler() gin.HandlerFunc {
 	}
 }
 
-func ChangeStatusHandler() gin.HandlerFunc {
+func ChangeStatusPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		adminID := c.MustGet("admin_id").(uint)
 
-		request := ChangeStatusRequest{}
+		request := ChangeStatusPhotoRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
 
-		query := ChangeStatusQuery{}
+		query := ChangeStatusPhotoQuery{}
 		if err := c.BindQuery(&query); err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -201,9 +201,9 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			return
 		}
 
-		condition1 := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
+		conditionMembership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
 		membership := models.Membership{}
-		if err := db.Where(&condition1).Find(&membership).Error; err != nil {
+		if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -215,9 +215,9 @@ func DeletePhotoHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
-		condition2 := models.Photo{FileName: fileUUID}
+		conditionPhoto := models.Photo{FileName: fileUUID}
 		photo := models.Photo{}
-		if err := db.Where(&condition2).Delete(&photo).Error; err != nil {
+		if err := db.Where(&conditionPhoto).Delete(&photo).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return

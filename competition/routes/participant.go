@@ -14,6 +14,7 @@ func ParticipantRoute(route *gin.Engine) {
 	participantGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllMembersHandler())
 	participantGroup.POST("/add", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
 	participantGroup.PUT("/change-career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
-	participantGroup.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleInterestHandler())
+	participantGroup.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleHandler())
+	participantGroup.PUT("/change-status", middlewares.AuthMiddleware(), controllers.ChangeStatusParticipantHandler())
 	participantGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
 }

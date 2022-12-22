@@ -8,5 +8,6 @@ type Admin struct {
 	gorm.Model
 	Username       string  `json:"username" gorm:"not null;unique"`
 	HashedPassword []byte  `json:"password" gorm:"not null"`
-	Approves       []Photo `json:"photos"`
+	ApprovesPhoto  []Photo `json:"photos"`
+	ApprovesTeam   []Team  `json:"teams"`
 }

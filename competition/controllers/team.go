@@ -48,6 +48,14 @@ type CompetitionRegistrationQuery struct {
 	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required"`
 }
 
+type ChangeStatusTeamQuery struct {
+	TeamID uint `form:"team_id" field:"team_id" binding:"required"`
+}
+
+type ChangeStatusTeamRequest struct {
+	Status models.TeamStatus `json:"status" binding:"required"`
+}
+
 func SignInTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
@@ -115,9 +123,9 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		}
 
 		// validate username exist
-		condition1 := models.Team{Username: request.Username}
+		conditionUsername := models.Team{Username: request.Username}
 		team := models.Team{}
-		if err := db.Where(&condition1).Find(&team).Error; err != nil {
+		if err := db.Where(&conditionUsername).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -129,9 +137,9 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		}
 
 		// validate team name exist
-		condition2 := models.Team{TeamName: request.TeamName}
+		conditionTeamName := models.Team{TeamName: request.TeamName}
 		team = models.Team{}
-		if err := db.Where(&condition2).Find(&team).Error; err != nil {
+		if err := db.Where(&conditionTeamName).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
 			return
@@ -142,16 +150,16 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		team = models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName}
+		team = models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName, Status: models.WaitingForEvaluation}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
 			}
 
 			for _, member := range request.Members {
-				condition3 := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest}
+				conditionParticipant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest, Status: models.WaitingForVerification}
 				participant := models.Participant{}
-				if err := tx.FirstOrCreate(&participant, &condition3).Error; err != nil {
+				if err := tx.FirstOrCreate(&participant, &conditionParticipant).Error; err != nil {
 					return err
 				}
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
@@ -276,6 +284,38 @@ func CompetitionRegistration() gin.HandlerFunc {
 
 		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
 		newTeam := models.Team{TeamCategory: query.TeamCategory}
+		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func ChangeStatusTeamHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		adminID := c.MustGet("admin_id").(uint)
+
+		request := ChangeStatusTeamRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		query := ChangeStatusTeamQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldTeam := models.Team{Model: gorm.Model{ID: query.TeamID}}
+		newTeam := models.Team{Status: request.Status, AdminID: adminID}
 		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
