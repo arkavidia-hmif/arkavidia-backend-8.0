@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/models"
@@ -20,10 +21,23 @@ type GetPhotoQuery struct {
 	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
 }
 
+type GetAllPhotosQuery struct {
+	Page int `form:"page" field:"page" binding:"required"`
+	Size int `form:"size" field:"size" binding:"required"`
+}
+
 type AddPhotoRequest struct {
 	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required"`
 	Type          models.PhotoType      `form:"type" field:"type" binding:"required"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
+}
+
+type ChangeStatusQuery struct {
+	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required"`
+}
+
+type ChangeStatusRequest struct {
+	Status models.PhotoStatus `json:"status" binding:"required"`
 }
 
 type DeletePhotoRequest struct {
@@ -62,6 +76,32 @@ func GetPhotoHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "Success", "Data": photos, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetAllPhotosHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		query := GetAllPhotosQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		offset := (query.Page - 1) * query.Size
+		limit := query.Size
+		photos := []models.Photo{}
+
+		if err := db.Offset(offset).Limit(limit).Find(&photos).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS", "Data": photos}
 		c.JSON(http.StatusOK, response)
 	}
 }
@@ -114,6 +154,38 @@ func AddPhotoHandler() gin.HandlerFunc {
 
 		response := gin.H{"Message": "Success", "Data": photo, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
 		c.JSON(http.StatusCreated, response)
+	}
+}
+
+func ChangeStatusHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		adminID := c.MustGet("admin_id").(uint)
+
+		request := ChangeStatusRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		query := ChangeStatusQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		oldPhoto := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
+		newPhoto := models.Photo{Status: request.Status, AdminID: adminID}
+		if err := db.Where(&oldPhoto).Updates(&newPhoto).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS"}
+		c.JSON(http.StatusOK, response)
 	}
 }
 

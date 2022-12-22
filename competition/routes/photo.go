@@ -8,7 +8,11 @@ import (
 )
 
 func PhotoRoute(route *gin.Engine) {
-	route.GET("/get-photo", middlewares.AuthMiddleware(), controllers.GetPhotoHandler())
-	route.POST("/add-photo", middlewares.AuthMiddleware(), controllers.AddPhotoHandler())
-	route.DELETE("/delete-photo", middlewares.AuthMiddleware(), controllers.DeletePhotoHandler())
+	photoGroup := route.Group("/photo")
+
+	photoGroup.GET("/get", middlewares.AuthMiddleware(), controllers.GetPhotoHandler())
+	photoGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllPhotosHandler())
+	photoGroup.POST("/add", middlewares.AuthMiddleware(), controllers.AddPhotoHandler())
+	photoGroup.PUT("/change-status", middlewares.AdminMiddleware(), controllers.ChangeStatusHandler())
+	photoGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeletePhotoHandler())
 }

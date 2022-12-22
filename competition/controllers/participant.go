@@ -11,6 +11,11 @@ import (
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 )
 
+type GetAllMembersQuery struct {
+	Page int `form:"page" field:"page" binding:"required"`
+	Size int `form:"size" field:"size" binding:"required"`
+}
+
 type AddMemberRequest struct {
 	Name           string                `json:"name" binding:"required"`
 	Email          string                `json:"email" binding:"required"`
@@ -31,11 +36,11 @@ type ChangeRoleQuery struct {
 }
 
 type ChangeRoleRequest struct {
-	Role          models.MembershipRole `json:"role"`
+	Role models.MembershipRole `json:"role" binding:"required"`
 }
 
 type DeleteMemberRequest struct {
-	ParticipantID uint `json:"participant_id"`
+	ParticipantID uint `json:"participant_id" binding:"required"`
 }
 
 func GetMemberHandler() gin.HandlerFunc {
@@ -70,6 +75,32 @@ func GetMemberHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": participants}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetAllMembersHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		query := GetAllMembersQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		offset := (query.Page - 1) * query.Size
+		limit := query.Size
+		members := []models.Membership{}
+
+		if err := db.Offset(offset).Limit(limit).Find(&members).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS", "Data": members}
 		c.JSON(http.StatusOK, response)
 	}
 }

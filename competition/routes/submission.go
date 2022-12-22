@@ -8,7 +8,10 @@ import (
 )
 
 func SubmissionRoute(route *gin.Engine) {
-	route.GET("/get-submission", middlewares.AuthMiddleware(), controllers.GetSubmissionHandler())
-	route.POST("/add-submission", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
-	route.DELETE("/delete-submission", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
+	submissionGroup := route.Group("/submission")
+
+	submissionGroup.GET("/get", middlewares.AuthMiddleware(), controllers.GetSubmissionHandler())
+	submissionGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllSubmissionsHandler())
+	submissionGroup.POST("/add", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
+	submissionGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
 }

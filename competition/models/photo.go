@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql/driver"
+	"fmt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -47,7 +48,23 @@ type Photo struct {
 	FileName      uuid.UUID   `json:"file_name" gorm:"type:uuid;unique"`
 	FileExtension string      `json:"file_extension" gorm:"not null"`
 	ParticipantID uint        `json:"participant_id" gorm:"not null"`
+	AdminID       uint        `json:"admin_id" gorm:"default:null"`
 	Status        PhotoStatus `json:"status" gorm:"type:photo_status;not null"`
 	Type          PhotoType   `json:"type" gorm:"type:photo_type;not null"`
 	Participant   Participant `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
+	ApprovedBy    Admin       `json:"admin" gorm:"foreignKey:AdminID;references:ID"`
+}
+
+// Menambahkan constraint untuk mengecek apakah terdapat photos yang telah diapprove namun admin tidak tercatat
+// atau photos yang belum diapprove namun admin tercatat
+func (photo *Photo) BeforeSave(tx *gorm.DB) error {
+	if photo.Status != WaitingForVerification && photo.AdminID == 0 {
+		return fmt.Errorf("ERROR: ADMIN MUST BE RECORDED")
+	}
+
+	if photo.Status == WaitingForVerification && photo.AdminID != 0 {
+		return fmt.Errorf("ERROR: STATUS MUST BE RECORDED")
+	}
+
+	return nil
 }

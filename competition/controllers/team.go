@@ -16,7 +16,7 @@ import (
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 )
 
-type SignInRequest struct {
+type SignInTeamRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password []byte `json:"password" binding:"required"`
 }
@@ -28,11 +28,16 @@ type Member struct {
 	Role           models.MembershipRole `json:"role" binding:"required"`
 }
 
-type SignUpRequest struct {
+type SignUpTeamRequest struct {
 	Username string   `json:"username" binding:"required"`
 	Password []byte   `json:"password" binding:"required"`
 	TeamName string   `json:"team_name" binding:"required"`
 	Members  []Member `json:"member_list" binding:"required"`
+}
+
+type GetAllTeamsQuery struct {
+	Page int `form:"page" field:"page" binding:"required"`
+	Size int `form:"size" field:"size" binding:"required"`
 }
 
 type ChangePasswordRequest struct {
@@ -43,12 +48,12 @@ type CompetitionRegistrationQuery struct {
 	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required"`
 }
 
-func SignInHandler() gin.HandlerFunc {
+func SignInTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
 
-		request := SignInRequest{}
+		request := SignInTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -90,12 +95,12 @@ func SignInHandler() gin.HandlerFunc {
 	}
 }
 
-func SignUpHandler() gin.HandlerFunc {
+func SignUpTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
 
-		request := SignUpRequest{}
+		request := SignUpTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.JSON(http.StatusBadRequest, response)
@@ -196,6 +201,31 @@ func GetTeamHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": team}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetAllTeamsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		query := GetAllTeamsQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		offset := (query.Page - 1) * query.Size
+		limit := query.Size
+		teams := []models.Team{}
+		if err := db.Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS", "Data": teams}
 		c.JSON(http.StatusOK, response)
 	}
 }

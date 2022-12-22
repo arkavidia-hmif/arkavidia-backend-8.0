@@ -8,9 +8,12 @@ import (
 )
 
 func TeamRoute(route *gin.Engine) {
-	route.GET("/get-team", middlewares.AuthMiddleware(), controllers.GetTeamHandler())
-	route.POST("/sign-in", controllers.SignInHandler())
-	route.POST("/sign-up", controllers.SignUpHandler())
-	route.PUT("/change-password", middlewares.AuthMiddleware(), controllers.ChangePasswordHandler())
-	route.PUT("/competition-registration", middlewares.AuthMiddleware(), controllers.CompetitionRegistration())
+	groupTeam := route.Group("/team")
+
+	groupTeam.GET("/get", middlewares.AuthMiddleware(), controllers.GetTeamHandler())
+	groupTeam.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllTeamsHandler())
+	groupTeam.POST("/sign-in", controllers.SignInTeamHandler())
+	groupTeam.POST("/sign-up", controllers.SignUpTeamHandler())
+	groupTeam.PUT("/change-password", middlewares.AuthMiddleware(), controllers.ChangePasswordHandler())
+	groupTeam.PUT("/competition-registration", middlewares.AuthMiddleware(), controllers.CompetitionRegistration())
 }

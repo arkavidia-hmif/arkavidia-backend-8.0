@@ -16,6 +16,11 @@ import (
 	storageService "arkavidia-backend-8.0/competition/services/storage"
 )
 
+type GetAllSubmissionsQuery struct {
+	Page int `form:"page" field:"page" binding:"required"`
+	Size int `form:"size" field:"size" binding:"required"`
+}
+
 type AddSubmissionRequest struct {
 	Stage models.SubmissionStage `form:"stage" field:"stage" binding:"required"`
 	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
@@ -41,6 +46,32 @@ func GetSubmissionHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetAllSubmissionsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+
+		query := GetAllSubmissionsQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		offset := (query.Page - 1) * query.Size
+		limit := query.Size
+		submissions := []models.Submission{}
+
+		if err := db.Offset(offset).Limit(limit).Find(&submissions).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		response := gin.H{"Message": "SUCCESS", "Data": submissions}
 		c.JSON(http.StatusOK, response)
 	}
 }
