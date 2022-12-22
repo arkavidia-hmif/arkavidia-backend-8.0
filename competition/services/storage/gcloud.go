@@ -13,6 +13,7 @@ import (
 
 // TODO: Tambahkan duplicate function call suppression mechanism menggunakan lib Singleflight
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-singleflight.html
+// ASSIGNED TO: @akbarmridho
 
 var currentClient *storage.Client = nil
 

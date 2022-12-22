@@ -12,6 +12,19 @@ import (
 	"arkavidia-backend-8.0/competition/utils/worker"
 )
 
+// TODO: Gunakan gzip untuk mengkompresi size HTTP Handler
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-gzip-compression.html
+// ASSIGNED TO: @rayhankinan
+
+// TODO: Tambahkan validasi payload request dengan menggunakan validator
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
+// ASSIGNED TO: @rayhankinan
+
+// TODO: Tambahkan secure middleware untuk menambah security
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-secure-middleware.html
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-https-tls.html
+// ASSIGNED TO: @rayhankinan
+
 func main() {
 	// Configure runtime
 	runtime.GOMAXPROCS(runtime.NumCPU())

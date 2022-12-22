@@ -10,6 +10,7 @@ import (
 func SendMailToClient(mailParameters broker.MailParameters) error {
 	// TODO: Tambahkan SMTP menggunakan lib gomail
 	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-send-email.html
+	// ASSIGNED TO: @samuelswandi
 
 	return nil
 }
