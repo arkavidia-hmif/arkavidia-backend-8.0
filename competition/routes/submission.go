@@ -12,6 +12,7 @@ func SubmissionRoute(route *gin.Engine) {
 
 	submissionGroup.GET("/get", middlewares.AuthMiddleware(), controllers.GetSubmissionHandler())
 	submissionGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllSubmissionsHandler())
+	submissionGroup.GET("/download", middlewares.AdminMiddleware(), controllers.DownloadSubmissionHandler())
 	submissionGroup.POST("/add", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
 	submissionGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
 }

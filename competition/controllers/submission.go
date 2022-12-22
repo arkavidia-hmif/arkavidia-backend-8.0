@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/models"
@@ -19,6 +20,10 @@ import (
 type GetAllSubmissionsQuery struct {
 	Page int `form:"page" field:"page" binding:"required"`
 	Size int `form:"size" field:"size" binding:"required"`
+}
+
+type DownloadSubmissionQuery struct {
+	SubmissionID uint `form:"submission_id" field:"submission_id" binding:"required"`
 }
 
 type AddSubmissionRequest struct {
@@ -72,6 +77,55 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": submissions}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func DownloadSubmissionHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		client := storageService.GetClient()
+		config := storageConfig.GetStorageConfig()
+
+		query := DownloadSubmissionQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		conditionSubmission := models.Submission{Model: gorm.Model{ID: query.SubmissionID}}
+		submission := models.Submission{}
+		if err := db.Where(&conditionSubmission).Find(&submission).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
+		IOWriter, err := storageService.DownloadFile(client, filename, config.SubmissionDir)
+		if err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		var content []byte
+		length, err := IOWriter.Write(content)
+		if err != nil {
+			response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Accept-Length", fmt.Sprintf("%d", length))
+		c.Writer.Write(content)
+
+		response := gin.H{"Message": "SUCCESS"}
 		c.JSON(http.StatusOK, response)
 	}
 }

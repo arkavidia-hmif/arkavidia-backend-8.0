@@ -26,6 +26,10 @@ type GetAllPhotosQuery struct {
 	Size int `form:"size" field:"size" binding:"required"`
 }
 
+type DownloadPhotoQuery struct {
+	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required"`
+}
+
 type AddPhotoRequest struct {
 	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required"`
 	Type          models.PhotoType      `form:"type" field:"type" binding:"required"`
@@ -102,6 +106,55 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": photos}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func DownloadPhotoHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.GetDB()
+		client := storageService.GetClient()
+		config := storageConfig.GetStorageConfig()
+
+		query := DownloadPhotoQuery{}
+		if err := c.BindQuery(&query); err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		conditionPhoto := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
+		photo := models.Photo{}
+		if err := db.Where(&conditionPhoto).Find(&photo).Error; err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		filename := fmt.Sprintf("%s.%s", photo.FileName, photo.FileExtension)
+		IOWriter, err := storageService.DownloadFile(client, filename, config.PhotoDir)
+		if err != nil {
+			response := gin.H{"Message": "ERROR: BAD REQUEST"}
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		var content []byte
+		length, err := IOWriter.Write(content)
+		if err != nil {
+			response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Accept-Length", fmt.Sprintf("%d", length))
+		c.Writer.Write(content)
+
+		response := gin.H{"Message": "SUCCESS"}
 		c.JSON(http.StatusOK, response)
 	}
 }
