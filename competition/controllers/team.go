@@ -14,6 +14,7 @@ import (
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
+	"arkavidia-backend-8.0/competition/utils/broker"
 )
 
 type SignInTeamRequest struct {
@@ -107,6 +108,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
+		mailBroker := broker.GetMailBroker()
 
 		request := SignUpTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
@@ -122,7 +124,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		// validate username exist
+		// Validate username valid
 		conditionUsername := models.Team{Username: request.Username}
 		team := models.Team{}
 		if err := db.Where(&conditionUsername).Find(&team).Error; err != nil {
@@ -136,7 +138,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		// validate team name exist
+		// Validate team name valid
 		conditionTeamName := models.Team{TeamName: request.TeamName}
 		team = models.Team{}
 		if err := db.Where(&conditionTeamName).Find(&team).Error; err != nil {
@@ -162,6 +164,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 				if err := tx.FirstOrCreate(&participant, &conditionParticipant).Error; err != nil {
 					return err
 				}
+
 				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
 				if err := tx.Create(&membership).Error; err != nil {
 					return err
@@ -188,6 +191,13 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
 			return
+		}
+
+		// Asynchronously mail to every member registered on the team
+		for _, member := range request.Members {
+			broker.SendMailTask(mailBroker, broker.MailParameters{
+				Email: member.Email,
+			})
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}

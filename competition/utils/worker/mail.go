@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"log"
 	"time"
 
 	"gopkg.in/gomail.v2"
@@ -23,7 +22,7 @@ func SendMailToClient(mailParameters broker.MailParameters) error {
 
 	mailer := gomail.NewMessage()
 	mailer.SetHeader("From", CONFIG_SENDER_NAME)
-	mailer.SetHeader("To", "13520075@std.stei.itb.ac.id")
+	mailer.SetHeader("To", mailParameters.Email)
 	mailer.SetAddressHeader("Cc", "admin_arkavidia@gmail.com", "Admin Arkavidia")
 	mailer.SetHeader("Subject", "Test mail")
 	mailer.SetBody("text/html", "Hello, <b>have a nice day</b>")
@@ -36,11 +35,8 @@ func SendMailToClient(mailParameters broker.MailParameters) error {
 	)
 
 	err := dialer.DialAndSend(mailer)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 
-	return nil
+	return err
 }
 
 func MailRun() {
