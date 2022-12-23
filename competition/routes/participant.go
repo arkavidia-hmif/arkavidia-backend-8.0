@@ -10,11 +10,11 @@ import (
 func ParticipantRoute(route *gin.Engine) {
 	participantGroup := route.Group("/participant")
 
-	participantGroup.GET("/get", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
-	participantGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllMembersHandler())
-	participantGroup.POST("/add", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
-	participantGroup.PUT("/change-career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
-	participantGroup.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleHandler())
-	participantGroup.PUT("/change-status", middlewares.AuthMiddleware(), controllers.ChangeStatusParticipantHandler())
-	participantGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
+	participantGroup.GET("/", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
+	participantGroup.GET("/all", middlewares.AdminMiddleware(), controllers.GetAllMembersHandler())
+	participantGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
+	participantGroup.PUT("/career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
+	participantGroup.PUT("/role", middlewares.AuthMiddleware(), controllers.ChangeRoleHandler())
+	participantGroup.PUT("/status", middlewares.AuthMiddleware(), controllers.ChangeStatusParticipantHandler())
+	participantGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
 }
