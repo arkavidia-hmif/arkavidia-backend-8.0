@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql/driver"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -53,18 +52,4 @@ type Team struct {
 	Memberships    []Membership `json:"memberships"`
 	Submissions    []Submission `json:"submissions"`
 	ApprovedBy     Admin        `json:"admin" gorm:"foreignKey:AdminID;references:ID"`
-}
-
-// Menambahkan constraint untuk mengecek apakah terdapat team yang telah diapprove namun admin tidak tercatat
-// atau team yang belum diapprove namun admin tercatat
-func (team *Team) BeforeSave(tx *gorm.DB) error {
-	if team.Status != WaitingForEvaluation && team.AdminID == 0 {
-		return fmt.Errorf("ERROR: ADMIN MUST BE RECORDED")
-	}
-
-	if team.Status == WaitingForEvaluation && team.AdminID != 0 {
-		return fmt.Errorf("ERROR: STATUS MUST BE RECORDED")
-	}
-
-	return nil
 }

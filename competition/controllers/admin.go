@@ -16,7 +16,7 @@ import (
 
 type SignInAdminRequest struct {
 	Username string `json:"username" binding:"required"`
-	Password []byte `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func SignInAdminHandler() gin.HandlerFunc {
@@ -39,7 +39,7 @@ func SignInAdminHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := bcrypt.CompareHashAndPassword(admin.HashedPassword, request.Password); err != nil {
+		if err := bcrypt.CompareHashAndPassword(admin.HashedPassword, []byte(request.Password)); err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
 			c.JSON(http.StatusUnauthorized, response)
 			return

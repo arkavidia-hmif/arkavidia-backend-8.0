@@ -8,7 +8,7 @@ import (
 )
 
 func ParticipantRoute(route *gin.Engine) {
-	participantGroup := route.Group("/member")
+	participantGroup := route.Group("/participant")
 
 	participantGroup.GET("/get", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
 	participantGroup.GET("/get-all", middlewares.AdminMiddleware(), controllers.GetAllMembersHandler())

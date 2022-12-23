@@ -18,7 +18,7 @@ import (
 
 type SignInTeamRequest struct {
 	Username string `json:"username" binding:"required"`
-	Password []byte `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type Member struct {
@@ -30,7 +30,7 @@ type Member struct {
 
 type SignUpTeamRequest struct {
 	Username string   `json:"username" binding:"required"`
-	Password []byte   `json:"password" binding:"required"`
+	Password string   `json:"password" binding:"required"`
 	TeamName string   `json:"team_name" binding:"required"`
 	Members  []Member `json:"member_list" binding:"required"`
 }
@@ -41,7 +41,7 @@ type GetAllTeamsQuery struct {
 }
 
 type ChangePasswordRequest struct {
-	Password []byte `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type CompetitionRegistrationQuery struct {
@@ -76,7 +76,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, request.Password); err != nil {
+		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, []byte(request.Password)); err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
 			c.JSON(http.StatusUnauthorized, response)
 			return
@@ -115,7 +115,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
@@ -250,7 +250,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 			return
 		}
 
-		hashedPassword, err := bcrypt.GenerateFromPassword(request.Password, bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
 			c.JSON(http.StatusInternalServerError, response)
