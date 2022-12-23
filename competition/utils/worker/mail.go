@@ -1,37 +1,42 @@
 package worker
 
 import (
+	"fmt"
 	"time"
 
 	"gopkg.in/gomail.v2"
 
+	mailConfig "arkavidia-backend-8.0/competition/config/mail"
 	messageConfig "arkavidia-backend-8.0/competition/config/message"
 	"arkavidia-backend-8.0/competition/utils/broker"
 )
 
-const CONFIG_SMTP_HOST = "smtp.gmail.com"
-const CONFIG_SMTP_PORT = 587
-const CONFIG_SENDER_NAME = "Arkavidia <admin_arkavidia@gmail.com>"
-const CONFIG_AUTH_EMAIL = "emailanda@gmail.com"
-const CONFIG_AUTH_PASSWORD = "passwordemailanda"
-
 func SendMailToClient(mailParameters broker.MailParameters) error {
 	// TODO: Tambahkan SMTP menggunakan lib gomail
 	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-send-email.html
-	// ASSIGNED TO: @samuelswandi
+	// ASSIGNED TO: @rayhankinan dan @samuelswandi
+
+	config := mailConfig.GetEmailConfig()
+
+	// TODO: Gunakan templating HTML static file sebagai body email
+	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/B-template-render-html.html
+	// ASSIGNED TO: @rayhankinan dan @samuelswandi
+
+	const subjectHeader = "Test Mail"
+	const emailBody = "Hello, <b>have a nice day</b>"
 
 	mailer := gomail.NewMessage()
-	mailer.SetHeader("From", CONFIG_SENDER_NAME)
+	mailer.SetHeader("From", fmt.Sprintf("%s <%s>", config.SenderName, config.AuthEmail))
 	mailer.SetHeader("To", mailParameters.Email)
-	mailer.SetAddressHeader("Cc", "admin_arkavidia@gmail.com", "Admin Arkavidia")
-	mailer.SetHeader("Subject", "Test mail")
-	mailer.SetBody("text/html", "Hello, <b>have a nice day</b>")
+	mailer.SetHeader("Subject", subjectHeader)
+	mailer.SetAddressHeader("Cc", config.AuthEmail, config.SenderName)
+	mailer.SetBody("text/html", emailBody)
 
 	dialer := gomail.NewDialer(
-		CONFIG_SMTP_HOST,
-		CONFIG_SMTP_PORT,
-		CONFIG_AUTH_EMAIL,
-		CONFIG_AUTH_PASSWORD,
+		config.SMTPHost,
+		config.SMTPPort,
+		config.AuthEmail,
+		config.AuthPassword,
 	)
 
 	err := dialer.DialAndSend(mailer)
