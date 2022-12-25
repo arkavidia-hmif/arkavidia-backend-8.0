@@ -11,7 +11,7 @@ func ParticipantRoute(route *gin.Engine) {
 	participantGroup := route.Group("/participant")
 
 	participantGroup.GET("/", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
-	participantGroup.GET("/all", middlewares.AdminMiddleware(), controllers.GetAllMembersHandler())
+	participantGroup.GET("/all", middlewares.AuthMiddleware(), controllers.GetAllMembersHandler())
 	participantGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
 	participantGroup.PUT("/career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
 	participantGroup.PUT("/role", middlewares.AuthMiddleware(), controllers.ChangeRoleHandler())

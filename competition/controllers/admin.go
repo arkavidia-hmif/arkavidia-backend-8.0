@@ -45,12 +45,13 @@ func SignInAdminHandler() gin.HandlerFunc {
 			return
 		}
 
-		adminClaims := middlewares.AdminClaims{
+		adminClaims := middlewares.AuthClaims{
 			RegisteredClaims: jwt.RegisteredClaims{
 				Issuer:    config.ApplicationName,
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
-			AdminID: admin.ID,
+			ID:   admin.ID,
+			Role: middlewares.Admin,
 		}
 
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, adminClaims)

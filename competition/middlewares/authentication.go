@@ -11,9 +11,17 @@ import (
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 )
 
+type AuthRole string
+
+const (
+	Admin AuthRole = "Admin"
+	Team  AuthRole = "Team"
+)
+
 type AuthClaims struct {
 	jwt.RegisteredClaims
-	TeamID uint `json:"team_id"`
+	ID   uint     `json:"id"`
+	Role AuthRole `json:"role"`
 }
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -49,7 +57,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("team_id", authClaim.TeamID)
+		c.Set("id", authClaim.ID)
+		c.Set("role", authClaim.Role)
 		c.Next()
 	}
 }

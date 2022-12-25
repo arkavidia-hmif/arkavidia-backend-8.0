@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -22,18 +21,15 @@ type SignInTeamRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type Member struct {
-	Name           string                `json:"name" binding:"required"`
-	Email          string                `json:"email" binding:"required"`
-	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
-	Role           models.MembershipRole `json:"role" binding:"required"`
+type SignUpTeamRequest struct {
+	Username string             `json:"username" binding:"required"`
+	Password string             `json:"password" binding:"required"`
+	TeamName string             `json:"team_name" binding:"required"`
+	Members  []SignUpMembership `json:"member_list" binding:"required"`
 }
 
-type SignUpTeamRequest struct {
-	Username string   `json:"username" binding:"required"`
-	Password string   `json:"password" binding:"required"`
-	TeamName string   `json:"team_name" binding:"required"`
-	Members  []Member `json:"member_list" binding:"required"`
+type GetTeamQuery struct {
+	TeamID uint `form:"team_id" field:"team_id" binding:"required"`
 }
 
 type GetAllTeamsQuery struct {
@@ -88,7 +84,8 @@ func SignInTeamHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
-			TeamID: team.ID,
+			ID:   team.ID,
+			Role: middlewares.Team,
 		}
 
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
@@ -124,7 +121,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		// Validate username valid
+		// Validate Username
 		conditionUsername := models.Team{Username: request.Username}
 		team := models.Team{}
 		if err := db.Where(&conditionUsername).Find(&team).Error; err != nil {
@@ -138,7 +135,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		// Validate team name valid
+		// Validate Team Name
 		conditionTeamName := models.Team{TeamName: request.TeamName}
 		team = models.Team{}
 		if err := db.Where(&conditionTeamName).Find(&team).Error; err != nil {
@@ -182,7 +179,8 @@ func SignUpTeamHandler() gin.HandlerFunc {
 				Issuer:    config.ApplicationName,
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.LoginExpirationDuration)),
 			},
-			TeamID: team.ID,
+			ID:   team.ID,
+			Role: middlewares.Team,
 		}
 
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, authClaims)
@@ -208,131 +206,217 @@ func SignUpTeamHandler() gin.HandlerFunc {
 func GetTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uint)
+		role := c.MustGet("role").(middlewares.AuthRole)
 
-		condition := models.Team{Model: gorm.Model{ID: teamID}}
-		team := models.Team{}
-		if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
+		switch role {
+		case middlewares.Admin:
+			{
+				query := GetTeamQuery{}
+				if err := c.BindQuery(&query); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				condition := models.Team{Model: gorm.Model{ID: query.TeamID}}
+				team := models.Team{}
+				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS", "Data": team}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		case middlewares.Team:
+			{
+				teamID := c.MustGet("id").(uint)
+				condition := models.Team{Model: gorm.Model{ID: teamID}}
+				team := models.Team{}
+				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS", "Data": team}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		}
-
-		response := gin.H{"Message": "SUCCESS", "Data": team}
-		c.JSON(http.StatusOK, response)
 	}
 }
 
 func GetAllTeamsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
+		role := c.MustGet("role").(middlewares.AuthRole)
 
-		query := GetAllTeamsQuery{}
-		if err := c.BindQuery(&query); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
+		switch role {
+		case middlewares.Admin:
+			{
+				query := GetAllTeamsQuery{}
+				if err := c.BindQuery(&query); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				offset := (query.Page - 1) * query.Size
+				limit := query.Size
+				teams := []models.Team{}
+				if err := db.Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS", "Data": teams}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		}
-
-		offset := (query.Page - 1) * query.Size
-		limit := query.Size
-		teams := []models.Team{}
-		if err := db.Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS", "Data": teams}
-		c.JSON(http.StatusOK, response)
 	}
 }
 
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uint)
+		role := c.MustGet("role").(middlewares.AuthRole)
 
-		request := ChangePasswordRequest{}
-		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
+		switch role {
+		case middlewares.Team:
+			{
+				request := ChangePasswordRequest{}
+				if err := c.BindJSON(&request); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+				if err != nil {
+					response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
+					c.JSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				teamID := c.MustGet("id").(uint)
+				oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
+				newTeam := models.Team{HashedPassword: hashedPassword}
+				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS"}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		}
-
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-		if err != nil {
-			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
-		newTeam := models.Team{HashedPassword: hashedPassword}
-		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS"}
-		c.JSON(http.StatusOK, response)
 	}
 }
 
 func CompetitionRegistration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		teamID := c.MustGet("team_id").(uint)
+		role := c.MustGet("role").(middlewares.AuthRole)
 
-		query := CompetitionRegistrationQuery{}
-		if err := c.BindQuery(&query); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
+		switch role {
+		case middlewares.Team:
+			{
+				query := CompetitionRegistrationQuery{}
+				if err := c.BindQuery(&query); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				teamID := c.MustGet("id").(uint)
+				oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
+				newTeam := models.Team{TeamCategory: query.TeamCategory}
+				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS"}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		}
-
-		oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
-		newTeam := models.Team{TeamCategory: query.TeamCategory}
-		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS"}
-		c.JSON(http.StatusOK, response)
 	}
 }
 
 func ChangeStatusTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
-		adminID := c.MustGet("admin_id").(uint)
+		role := c.MustGet("role").(middlewares.AuthRole)
 
-		request := ChangeStatusTeamRequest{}
-		if err := c.BindJSON(&request); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
+		switch role {
+		case middlewares.Admin:
+			{
+				request := ChangeStatusTeamRequest{}
+				if err := c.BindJSON(&request); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				query := ChangeStatusTeamQuery{}
+				if err := c.BindQuery(&query); err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				adminID := c.MustGet("id").(uint)
+				oldTeam := models.Team{Model: gorm.Model{ID: query.TeamID}}
+				newTeam := models.Team{Status: request.Status, AdminID: adminID}
+				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
+					c.JSON(http.StatusBadRequest, response)
+					return
+				}
+
+				response := gin.H{"Message": "SUCCESS"}
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		}
-
-		query := ChangeStatusTeamQuery{}
-		if err := c.BindQuery(&query); err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		oldTeam := models.Team{Model: gorm.Model{ID: query.TeamID}}
-		newTeam := models.Team{Status: request.Status, AdminID: adminID}
-		if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
-			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
-			return
-		}
-
-		response := gin.H{"Message": "SUCCESS"}
-		c.JSON(http.StatusOK, response)
 	}
 }
