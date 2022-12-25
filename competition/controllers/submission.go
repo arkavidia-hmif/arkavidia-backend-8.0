@@ -215,7 +215,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 				openedFile, err := request.File.Open()
 				if err != nil {
 					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
-					c.JSON(http.StatusBadRequest, response)
+					c.JSON(http.StatusInternalServerError, response)
 					return
 				}
 				defer openedFile.Close()

@@ -35,30 +35,32 @@ type Membership struct {
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih
 // dengan jenis lomba yang sama atau memiliki role leader lebih dari satu kali
 func (membership *Membership) BeforeSave(tx *gorm.DB) error {
-	conditionParticipantID := Membership{ParticipantID: membership.ParticipantID}
-	oldMembershipsParticipantID := []Membership{}
-	if err := tx.Where(&conditionParticipantID).Find(&oldMembershipsParticipantID).Error; err != nil {
-		return err
-	}
-
-	for _, oldMembership := range oldMembershipsParticipantID {
-		if oldMembership.Team.TeamCategory != "" && oldMembership.Team.TeamCategory == membership.Team.TeamCategory {
-			return fmt.Errorf("ERROR: CANNOT PARTICIPATE MORE THAN ONCE")
+	if membership.TeamID != 0 && membership.ParticipantID != 0 {
+		conditionParticipantID := Membership{ParticipantID: membership.ParticipantID}
+		oldMembershipsParticipantID := []Membership{}
+		if err := tx.Where(&conditionParticipantID).Find(&oldMembershipsParticipantID).Error; err != nil {
+			return err
 		}
-		if oldMembership.Role == Leader && membership.Role == Leader {
-			return fmt.Errorf("ERROR: INELIGIBLE LEADER")
+
+		for _, oldMembership := range oldMembershipsParticipantID {
+			if oldMembership.Team.TeamCategory != "" && oldMembership.Team.TeamCategory == membership.Team.TeamCategory {
+				return fmt.Errorf("ERROR: CANNOT PARTICIPATE MORE THAN ONCE")
+			}
+			if oldMembership.Role == Leader && membership.Role == Leader {
+				return fmt.Errorf("ERROR: INELIGIBLE LEADER")
+			}
 		}
-	}
 
-	conditionTeamID := Membership{TeamID: membership.TeamID}
-	oldMembershipsTeamID := []Membership{}
-	if err := tx.Where(&conditionTeamID).Find(&oldMembershipsTeamID).Error; err != nil {
-		return err
-	}
+		conditionTeamID := Membership{TeamID: membership.TeamID}
+		oldMembershipsTeamID := []Membership{}
+		if err := tx.Where(&conditionTeamID).Find(&oldMembershipsTeamID).Error; err != nil {
+			return err
+		}
 
-	for _, oldMembership := range oldMembershipsTeamID {
-		if oldMembership.Role == Leader && membership.Role == Leader {
-			return fmt.Errorf("ERROR: INELIGIBLE LEADER")
+		for _, oldMembership := range oldMembershipsTeamID {
+			if oldMembership.Role == Leader && membership.Role == Leader {
+				return fmt.Errorf("ERROR: INELIGIBLE LEADER")
+			}
 		}
 	}
 

@@ -232,7 +232,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 			{
 				request := AddPhotoRequest{}
 				if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-					response := gin.H{"Message": "Error: Bad Request"}
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.JSON(http.StatusBadRequest, response)
 					return
 				}
@@ -248,8 +248,8 @@ func AddPhotoHandler() gin.HandlerFunc {
 
 				openedFile, err := request.File.Open()
 				if err != nil {
-					response := gin.H{"Message": "Error: File Cannot be Accessed"}
-					c.JSON(http.StatusBadRequest, response)
+					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
+					c.JSON(http.StatusInternalServerError, response)
 					return
 				}
 				defer openedFile.Close()
@@ -259,18 +259,18 @@ func AddPhotoHandler() gin.HandlerFunc {
 
 				photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForApproval, Type: request.Type}
 				if err := db.Create(&photo).Error; err != nil {
-					response := gin.H{"Message": "Error: Bad Request"}
+					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.JSON(http.StatusBadRequest, response)
 					return
 				}
 
 				if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
-					response := gin.H{"Message": "Error: Google Cloud Storage Cannot be Accessed"}
+					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 					c.JSON(http.StatusInternalServerError, response)
 					return
 				}
 
-				response := gin.H{"Message": "Success", "Data": photo, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
+				response := gin.H{"Message": "SUCCESS", "Data": photo, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
 				c.JSON(http.StatusCreated, response)
 				return
 			}

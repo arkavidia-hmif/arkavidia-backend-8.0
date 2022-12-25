@@ -162,7 +162,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 					return err
 				}
 
-				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
+				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role, Team: team, Participant: participant}
 				if err := tx.Create(&membership).Error; err != nil {
 					return err
 				}
