@@ -56,7 +56,7 @@ func main() {
 	routes.NotFoundRoute(r)
 
 	// Goroutine Worker
-	go worker.MailRun()
+	go worker.RunMailWorker(1)
 
 	// RUn App
 	r.Run()

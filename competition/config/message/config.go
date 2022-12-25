@@ -8,7 +8,7 @@ import (
 
 type MessageConfig struct {
 	BufferSize int
-	ReloadTime time.Duration
+	Timeout    time.Duration
 }
 
 var currentMessageConfig *MessageConfig = nil
@@ -18,15 +18,15 @@ func Init() *MessageConfig {
 	if err != nil {
 		panic(err)
 	}
-	numberOfSeconds, err := strconv.Atoi(os.Getenv("RELOAD_TIME"))
+	numberofTimeoutSeconds, err := strconv.Atoi(os.Getenv("MESSAGE_TIMEOUT"))
 	if err != nil {
 		panic(err)
 	}
-	reloadTime := time.Duration(numberOfSeconds) * time.Second
+	timeout := time.Duration(numberofTimeoutSeconds) * time.Second
 
 	return &MessageConfig{
 		BufferSize: bufferSize,
-		ReloadTime: reloadTime,
+		Timeout:    timeout,
 	}
 }
 

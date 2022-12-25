@@ -13,7 +13,7 @@ import (
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
-	"arkavidia-backend-8.0/competition/utils/broker"
+	"arkavidia-backend-8.0/competition/utils/worker"
 )
 
 type SignInTeamRequest struct {
@@ -105,7 +105,6 @@ func SignUpTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.GetDB()
 		config := authenticationConfig.GetAuthConfig()
-		mailBroker := broker.GetMailBroker()
 
 		request := SignUpTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
@@ -193,9 +192,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 
 		// Asynchronously mail to every member registered on the team
 		for _, member := range request.Members {
-			broker.SendMailTask(mailBroker, broker.MailParameters{
-				Email: member.Email,
-			})
+			worker.AddMailToBroker(worker.MailParameters{Email: member.Email})
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}

@@ -1,60 +1,133 @@
 package worker
 
 import (
+	"context"
 	"fmt"
-	"time"
+	"sync"
 
 	"gopkg.in/gomail.v2"
 
 	mailConfig "arkavidia-backend-8.0/competition/config/mail"
 	messageConfig "arkavidia-backend-8.0/competition/config/message"
-	"arkavidia-backend-8.0/competition/utils/broker"
 )
 
-func SendMailToClient(mailParameters broker.MailParameters) error {
+type MailParameters struct {
+	Email string
+}
+
+type MailBroker struct {
+	channel chan MailParameters
+	wg      sync.WaitGroup
+}
+
+var mailBroker *MailBroker = nil
+
+func Init() *MailBroker {
+	config := messageConfig.GetMessageConfig()
+
+	// Asynchronous Channel
+	return &MailBroker{
+		channel: make(chan MailParameters, config.BufferSize),
+	}
+}
+
+func GetMailBroker() *MailBroker {
+	if mailBroker == nil {
+		mailBroker = Init()
+	}
+	return mailBroker
+}
+
+func SendMailToClient(ctx context.Context, mailParameters MailParameters) error {
 	// TODO: Tambahkan SMTP menggunakan lib gomail
 	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-send-email.html
 	// ASSIGNED TO: @rayhankinan dan @samuelswandi
-
-	config := mailConfig.GetEmailConfig()
 
 	// TODO: Gunakan templating HTML static file sebagai body email
 	// REFERENCE: https://dasarpemrogramangolang.novalagung.com/B-template-render-html.html
 	// ASSIGNED TO: @rayhankinan dan @samuelswandi
 
-	const subjectHeader = "Test Mail"
-	const emailBody = "Hello, <b>have a nice day</b>"
+	// Synchronous Channel
+	errorBroker := make(chan error)
 
-	mailer := gomail.NewMessage()
+	go func() {
+		config := mailConfig.GetEmailConfig()
 
-	mailer.SetHeader("From", fmt.Sprintf("%s <%s>", config.SenderName, config.AuthEmail))
-	mailer.SetHeader("To", mailParameters.Email)
-	mailer.SetHeader("Subject", subjectHeader)
-	mailer.SetAddressHeader("Cc", config.AuthEmail, config.SenderName)
-	mailer.SetBody("text/html", emailBody)
+		const subjectHeader = "Test Mail"
+		const emailBody = "Hello, <b>have a nice day</b>"
 
-	dialer := gomail.NewDialer(
-		config.SMTPHost,
-		config.SMTPPort,
-		config.AuthEmail,
-		config.AuthPassword,
-	)
+		mailer := gomail.NewMessage()
+		mailer.SetHeader("From", fmt.Sprintf("%s <%s>", config.SenderName, config.AuthEmail))
+		mailer.SetHeader("To", mailParameters.Email)
+		mailer.SetHeader("Subject", subjectHeader)
+		mailer.SetAddressHeader("Cc", config.AuthEmail, config.SenderName)
+		mailer.SetBody("text/html", emailBody)
 
-	err := dialer.DialAndSend(mailer)
+		dialer := gomail.NewDialer(
+			config.SMTPHost,
+			config.SMTPPort,
+			config.AuthEmail,
+			config.AuthPassword,
+		)
 
-	return err
+		errorBroker <- dialer.DialAndSend(mailer)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-errorBroker:
+		return err
+	}
+}
+
+func RecoverMailToBroker(mailParameters MailParameters) {
+	if r := recover(); r != nil {
+		AddMailToBroker(mailParameters)
+	}
+}
+
+func WaitMailToClient(mailParameters MailParameters) {
+	config := messageConfig.GetMessageConfig()
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)
+	defer cancel()
+
+	defer RecoverMailToBroker(mailParameters)
+
+	err := SendMailToClient(ctx, mailParameters)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func AddMailToBroker(mailParameters MailParameters) {
+	mailBroker := GetMailBroker()
+
+	mailBroker.channel <- mailParameters
 }
 
 func MailRun() {
-	config := messageConfig.GetMessageConfig()
-	mailBroker := broker.GetMailBroker()
+	mailBroker := GetMailBroker()
 
-	for {
-		if broker.GetLength(mailBroker) > 0 {
-			mailParameters := broker.ReceiveMailTask(mailBroker)
-			go SendMailToClient(mailParameters)
-		} else {
-			time.Sleep(config.ReloadTime)
-		}
+	defer mailBroker.wg.Done()
+	for mailParameters := range mailBroker.channel {
+		WaitMailToClient(mailParameters)
 	}
+}
+
+func RunMailWorker(numOfWorkers int) {
+	mailBroker := GetMailBroker()
+
+	mailBroker.wg.Add(numOfWorkers)
+	for i := 0; i < numOfWorkers; i++ {
+		go MailRun()
+	}
+	mailBroker.wg.Wait()
+}
+
+func CloseWorker() {
+	mailBroker := GetMailBroker()
+
+	close(mailBroker.channel)
 }
