@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 
+	messageConfig "arkavidia-backend-8.0/competition/config/message"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/routes"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
@@ -56,7 +57,8 @@ func main() {
 	routes.NotFoundRoute(r)
 
 	// Goroutine Worker
-	go worker.RunMailWorker(1)
+	configMessage := messageConfig.GetMessageConfig()
+	go worker.RunMailWorker(configMessage.WorkerSize)
 
 	// RUn App
 	r.Run()
