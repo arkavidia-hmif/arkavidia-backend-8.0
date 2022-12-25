@@ -3,6 +3,7 @@ package main
 import (
 	"runtime"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"arkavidia-backend-8.0/competition/middlewares"
@@ -38,6 +39,7 @@ func main() {
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
 
 	// Routes
 	routes.AdminRoute(r)

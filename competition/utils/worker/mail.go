@@ -26,6 +26,7 @@ func SendMailToClient(mailParameters broker.MailParameters) error {
 	const emailBody = "Hello, <b>have a nice day</b>"
 
 	mailer := gomail.NewMessage()
+
 	mailer.SetHeader("From", fmt.Sprintf("%s <%s>", config.SenderName, config.AuthEmail))
 	mailer.SetHeader("To", mailParameters.Email)
 	mailer.SetHeader("Subject", subjectHeader)
