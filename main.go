@@ -5,17 +5,20 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/routes"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
+	"arkavidia-backend-8.0/competition/utils/validation"
 	"arkavidia-backend-8.0/competition/utils/worker"
 )
 
 // TODO: Gunakan gzip untuk mengkompresi size HTTP Handler
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-gzip-compression.html
 // ASSIGNED TO: @rayhankinan
+// STATUS: DONE
 
 // TODO: Tambahkan validasi payload request dengan menggunakan validator
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
@@ -36,6 +39,9 @@ func main() {
 	// Setup Services Check
 	databaseService.GetDB()
 	storageService.GetClient()
+
+	// Setup Validator
+	binding.Validator = validation.GetValidator()
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
