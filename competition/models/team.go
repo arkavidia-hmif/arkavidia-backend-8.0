@@ -58,12 +58,13 @@ type Team struct {
 // Menambahkan constraint untuk mengecek apakah terdapat photos yang telah diapprove namun admin tidak tercatat
 // atau photos yang belum diapprove namun admin tercatat
 func (team *Team) BeforeSave(tx *gorm.DB) error {
-	if team.Status != WaitingForEvaluation && team.AdminID == 0 {
-		return fmt.Errorf("ERROR: ADMIN MUST BE RECORDED")
-	}
-
-	if team.Status == WaitingForEvaluation && team.AdminID != 0 {
-		return fmt.Errorf("ERROR: STATUS MUST BE RECORDED")
+	if team.Status != "" {
+		if team.Status != WaitingForEvaluation && team.AdminID == 0 {
+			return fmt.Errorf("ERROR: ADMIN MUST BE RECORDED")
+		}
+		if team.Status == WaitingForEvaluation && team.AdminID != 0 {
+			return fmt.Errorf("ERROR: STATUS MUST BE RECORDED")
+		}
 	}
 
 	return nil

@@ -101,9 +101,9 @@ func (mailBroker *MailBroker) waitMailToClient(mailParameters MailParameters) {
 }
 
 func (mailBroker *MailBroker) mailRun() {
-	mailBroker.lazyInit()
-
 	defer mailBroker.wg.Done()
+
+	mailBroker.lazyInit()
 	for mailParameters := range mailBroker.channel {
 		mailBroker.waitMailToClient(mailParameters)
 	}
