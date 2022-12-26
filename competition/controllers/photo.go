@@ -53,8 +53,8 @@ type DeletePhotoRequest struct {
 
 func GetPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -121,7 +121,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 
 func GetAllPhotosHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -160,9 +160,8 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 
 func DownloadPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		client := storageService.GetClient()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -184,7 +183,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				}
 
 				filename := fmt.Sprintf("%s.%s", photo.FileName, photo.FileExtension)
-				IOWriter, err := storageService.DownloadFile(client, filename, config.PhotoDir)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.JSON(http.StatusBadRequest, response)
@@ -210,6 +209,14 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				c.JSON(http.StatusOK, response)
 				return
 			}
+		case middlewares.Team:
+			{
+				// TODO: Tambahkan handler untuk download photo team
+				// ASSIGNED TO: @rayhankinan
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
@@ -222,9 +229,8 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 
 func AddPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		client := storageService.GetClient()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -264,7 +270,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 					return
 				}
 
-				if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
+				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
 					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 					c.JSON(http.StatusInternalServerError, response)
 					return
@@ -286,7 +292,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 
 func ChangeStatusPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -331,7 +337,7 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 
 func DeletePhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {

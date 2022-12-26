@@ -58,7 +58,7 @@ type DeleteMemberRequest struct {
 
 func GetMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -146,7 +146,7 @@ func GetMemberHandler() gin.HandlerFunc {
 
 func GetAllMembersHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -185,7 +185,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 
 func AddMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -238,7 +238,7 @@ func AddMemberHandler() gin.HandlerFunc {
 
 func ChangeCareerInterestHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -291,7 +291,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 
 func ChangeRoleHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -336,7 +336,7 @@ func ChangeRoleHandler() gin.HandlerFunc {
 
 func ChangeStatusParticipantHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -380,7 +380,7 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 
 func DeleteParticipantHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {

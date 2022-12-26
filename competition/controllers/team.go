@@ -9,11 +9,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	authenticationConfig "arkavidia-backend-8.0/competition/config/authentication"
+	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
-	"arkavidia-backend-8.0/competition/utils/worker"
+	"arkavidia-backend-8.0/competition/utils/mail"
 )
 
 type SignInTeamRequest struct {
@@ -55,8 +55,8 @@ type ChangeStatusTeamRequest struct {
 
 func SignInTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		config := authenticationConfig.GetAuthConfig()
+		db := databaseService.DB.GetConnection()
+		config := authConfig.Config.GetMetadata()
 
 		request := SignInTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
@@ -103,8 +103,8 @@ func SignInTeamHandler() gin.HandlerFunc {
 
 func SignUpTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		config := authenticationConfig.GetAuthConfig()
+		db := databaseService.DB.GetConnection()
+		config := authConfig.Config.GetMetadata()
 
 		request := SignUpTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
@@ -192,7 +192,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 
 		// Asynchronously mail to every member registered on the team
 		for _, member := range request.Members {
-			worker.AddMailToBroker(worker.MailParameters{Email: member.Email})
+			mail.Broker.AddMailToBroker(mail.MailParameters{Email: member.Email})
 		}
 
 		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}
@@ -202,7 +202,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 
 func GetTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -254,7 +254,7 @@ func GetTeamHandler() gin.HandlerFunc {
 
 func GetAllTeamsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -292,7 +292,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -337,7 +337,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 func CompetitionRegistration() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -375,7 +375,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 
 func ChangeStatusTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {

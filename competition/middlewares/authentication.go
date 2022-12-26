@@ -26,7 +26,7 @@ type AuthClaims struct {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		config := authConfig.GetAuthConfig()
+		config := authConfig.Config.GetMetadata()
 
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {

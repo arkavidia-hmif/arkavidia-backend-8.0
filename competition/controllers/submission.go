@@ -43,8 +43,8 @@ type DeleteSubmissionRequest struct {
 
 func GetSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -96,7 +96,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 
 func GetAllSubmissionsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -135,9 +135,8 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 
 func DownloadSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		client := storageService.GetClient()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -159,7 +158,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				}
 
 				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
-				IOWriter, err := storageService.DownloadFile(client, filename, config.SubmissionDir)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.JSON(http.StatusBadRequest, response)
@@ -185,6 +184,14 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				c.JSON(http.StatusOK, response)
 				return
 			}
+		case middlewares.Team:
+			{
+				// TODO: Tambahkan handler untuk download photo team
+				// ASSIGNED TO: @rayhankinan
+				response := gin.H{"Message": "ERROR: INVALID ROLE"}
+				c.JSON(http.StatusUnauthorized, response)
+				return
+			}
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
@@ -197,9 +204,8 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 
 func AddSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		client := storageService.GetClient()
-		config := storageConfig.GetStorageConfig()
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {
@@ -231,7 +237,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 					return
 				}
 
-				if err := storageService.UploadFile(client, fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
+				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
 					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
 					c.JSON(http.StatusInternalServerError, response)
 					return
@@ -253,7 +259,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 
 func DeleteSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
+		db := databaseService.DB.GetConnection()
 		role := c.MustGet("role").(middlewares.AuthRole)
 
 		switch role {

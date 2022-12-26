@@ -5,55 +5,37 @@ import (
 	"sync"
 
 	"github.com/go-playground/validator/v10"
+
+	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 type CustomValidator struct {
-	once     sync.Once
 	validate *validator.Validate
+	once     sync.Once
 }
 
-func (cv *CustomValidator) ValidateStruct(obj interface{}) error {
-	if kindOfData(obj) == reflect.Struct {
-		cv.lazyInit()
-		if err := cv.validate.Struct(obj); err != nil {
+// Private
+func (customValidator *CustomValidator) lazyInit() {
+	customValidator.once.Do(func() {
+		customValidator.validate = validator.New()
+		customValidator.validate.SetTagName("binding")
+	})
+}
+
+// Public
+func (customValidator *CustomValidator) ValidateStruct(obj interface{}) error {
+	if sanitizer.KindOfData(obj) == reflect.Struct {
+		customValidator.lazyInit()
+		if err := customValidator.validate.Struct(obj); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (cv *CustomValidator) Engine() interface{} {
-	cv.lazyInit()
-	return cv.validate
+func (customValidator *CustomValidator) Engine() interface{} {
+	customValidator.lazyInit()
+	return customValidator.validate
 }
 
-func (cv *CustomValidator) lazyInit() {
-	cv.once.Do(func() {
-		cv.validate = validator.New()
-		cv.validate.SetTagName("binding")
-	})
-}
-
-func kindOfData(obj interface{}) reflect.Kind {
-	value := reflect.ValueOf(obj)
-	valueType := value.Kind()
-
-	if valueType == reflect.Ptr {
-		valueType = value.Elem().Kind()
-	}
-
-	return valueType
-}
-
-var customValidator *CustomValidator = nil
-
-func Init() *CustomValidator {
-	return &CustomValidator{}
-}
-
-func GetValidator() *CustomValidator {
-	if customValidator == nil {
-		customValidator = Init()
-	}
-	return customValidator
-}
+var Validator = &CustomValidator{}

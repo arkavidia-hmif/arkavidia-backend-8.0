@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 
-	authenticationConfig "arkavidia-backend-8.0/competition/config/authentication"
+	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
@@ -21,8 +21,8 @@ type SignInAdminRequest struct {
 
 func SignInAdminHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		db := databaseService.GetDB()
-		config := authenticationConfig.GetAuthConfig()
+		db := databaseService.DB.GetConnection()
+		config := authConfig.Config.GetMetadata()
 
 		request := SignInAdminRequest{}
 		if err := c.BindJSON(&request); err != nil {

@@ -10,13 +10,11 @@ import (
 	messageConfig "arkavidia-backend-8.0/competition/config/message"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/routes"
-	databaseService "arkavidia-backend-8.0/competition/services/database"
-	storageService "arkavidia-backend-8.0/competition/services/storage"
+	"arkavidia-backend-8.0/competition/utils/mail"
 	"arkavidia-backend-8.0/competition/utils/validation"
-	"arkavidia-backend-8.0/competition/utils/worker"
 )
 
-// TODO: Gunakan gzip untuk mengkompresi size HTTP Handler
+// TODO: Gunakan gzip untuk mengkompresi size HTTP Response
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-gzip-compression.html
 // ASSIGNED TO: @rayhankinan
 // STATUS: DONE
@@ -24,6 +22,7 @@ import (
 // TODO: Tambahkan validasi payload request dengan menggunakan validator
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
 // ASSIGNED TO: @rayhankinan
+// STATUS: IN PROGRESS
 
 // TODO: Tambahkan secure middleware untuk menambah security
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-secure-middleware.html
@@ -37,12 +36,8 @@ func main() {
 	// Gin Framework
 	r := gin.Default()
 
-	// Setup Services Check
-	databaseService.GetDB()
-	storageService.GetClient()
-
 	// Setup Validator
-	binding.Validator = validation.GetValidator()
+	binding.Validator = validation.Validator
 
 	// Middlewares
 	r.Use(middlewares.CORSMiddleware())
@@ -57,9 +52,9 @@ func main() {
 	routes.NotFoundRoute(r)
 
 	// Goroutine Worker
-	configMessage := messageConfig.GetMessageConfig()
-	go worker.RunMailWorker(configMessage.WorkerSize)
+	configMessage := messageConfig.Config.GetMetadata()
+	go mail.Broker.RunMailWorker(configMessage.WorkerSize)
 
-	// RUn App
+	// Run App
 	r.Run()
 }
