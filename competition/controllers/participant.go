@@ -67,7 +67,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				query := GetMemberQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -75,7 +75,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				memberships := []models.Membership{}
 				if err := db.Where(&condition).Find(&memberships).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -93,7 +93,7 @@ func GetMemberHandler() gin.HandlerFunc {
 					return nil
 				}); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -108,7 +108,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				memberships := []models.Membership{}
 				if err := db.Where(&condition).Find(&memberships).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -126,7 +126,7 @@ func GetMemberHandler() gin.HandlerFunc {
 					return nil
 				}); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -137,7 +137,7 @@ func GetMemberHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -155,7 +155,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 				query := GetAllMembersQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -165,7 +165,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 
 				if err := db.Offset(offset).Limit(limit).Find(&members).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -176,7 +176,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -194,7 +194,7 @@ func AddMemberHandler() gin.HandlerFunc {
 				request := AddMemberRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -218,7 +218,7 @@ func AddMemberHandler() gin.HandlerFunc {
 
 				}); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -229,7 +229,7 @@ func AddMemberHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -247,14 +247,14 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				request := ChangeCareerInterestRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := ChangeCareerInterestQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -263,7 +263,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -271,7 +271,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				newParticipant := models.Participant{CareerInterest: request.CareerInterest}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -282,7 +282,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -300,14 +300,14 @@ func ChangeRoleHandler() gin.HandlerFunc {
 				request := ChangeRoleRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := ChangeRoleQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -316,7 +316,7 @@ func ChangeRoleHandler() gin.HandlerFunc {
 				newMembership := models.Membership{Role: request.Role}
 				if err := db.Where(&oldMembership).Updates(&newMembership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -327,7 +327,7 @@ func ChangeRoleHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -345,14 +345,14 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 				request := ChangeStatusParticipantRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := ChangeStatusParticipantQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -360,7 +360,7 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 				newParticipant := models.Participant{Status: request.Status}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -371,7 +371,7 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -389,7 +389,7 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 				request := DeleteMemberRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -398,13 +398,13 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				if err := db.Delete(&membership); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -415,7 +415,7 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}

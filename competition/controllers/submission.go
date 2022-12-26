@@ -53,7 +53,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 				query := GetSubmissionQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -61,7 +61,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 				submissions := []models.Submission{}
 				if err := db.Where(&condition).Find(&submissions).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -76,7 +76,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 				submissions := []models.Submission{}
 				if err := db.Where(&condition).Find(&submissions).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -87,7 +87,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -105,7 +105,7 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 				query := GetAllSubmissionsQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -115,7 +115,7 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 
 				if err := db.Offset(offset).Limit(limit).Find(&submissions).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -126,7 +126,7 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -145,7 +145,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				query := DownloadSubmissionQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -153,7 +153,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				submission := models.Submission{}
 				if err := db.Where(&conditionSubmission).Find(&submission).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -161,7 +161,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -169,7 +169,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				length, err := IOWriter.Write(content)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 
@@ -189,13 +189,13 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				// TODO: Tambahkan handler untuk download photo team
 				// ASSIGNED TO: @rayhankinan
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -214,14 +214,14 @@ func AddSubmissionHandler() gin.HandlerFunc {
 				request := AddSubmissionRequest{}
 				if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				openedFile, err := request.File.Open()
 				if err != nil {
 					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 				defer openedFile.Close()
@@ -233,13 +233,13 @@ func AddSubmissionHandler() gin.HandlerFunc {
 				submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Stage: request.Stage}
 				if err := db.Create(&submission).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
 					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 
@@ -250,7 +250,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -270,14 +270,14 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 				request := DeleteSubmissionRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				fileUUID, err := uuid.Parse(request.FileName)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -285,7 +285,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 				submission := models.Submission{}
 				if err := db.Where(&condition).Delete(&submission).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -296,7 +296,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}

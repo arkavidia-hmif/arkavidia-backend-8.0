@@ -63,7 +63,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 				query := GetPhotoQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -71,7 +71,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 				photos := []models.Photo{}
 				if err := db.Where(&conditionPhoto).Find(&photos).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -84,7 +84,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 				query := GetPhotoQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -93,7 +93,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 				membership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
 				if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -101,7 +101,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 				photos := []models.Photo{}
 				if err := db.Where(&conditionPhoto).Find(&photos).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -112,7 +112,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -130,7 +130,7 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 				query := GetAllPhotosQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -140,7 +140,7 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 
 				if err := db.Offset(offset).Limit(limit).Find(&photos).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -151,7 +151,7 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -170,7 +170,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				query := DownloadPhotoQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -178,7 +178,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				photo := models.Photo{}
 				if err := db.Where(&conditionPhoto).Find(&photo).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -186,7 +186,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				IOWriter, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -194,7 +194,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				length, err := IOWriter.Write(content)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 
@@ -214,13 +214,13 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				// TODO: Tambahkan handler untuk download photo team
 				// ASSIGNED TO: @rayhankinan
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -239,7 +239,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 				request := AddPhotoRequest{}
 				if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -248,14 +248,14 @@ func AddPhotoHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				openedFile, err := request.File.Open()
 				if err != nil {
 					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 				defer openedFile.Close()
@@ -266,13 +266,13 @@ func AddPhotoHandler() gin.HandlerFunc {
 				photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForApproval, Type: request.Type}
 				if err := db.Create(&photo).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
 					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 
@@ -283,7 +283,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -301,14 +301,14 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 				request := ChangeStatusPhotoRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := ChangeStatusPhotoQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -317,7 +317,7 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 				newPhoto := models.Photo{Status: request.Status, AdminID: adminID}
 				if err := db.Where(&oldPhoto).Updates(&newPhoto).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -328,7 +328,7 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -346,7 +346,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 				request := DeletePhotoRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -355,21 +355,21 @@ func DeletePhotoHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				fileUUID, err := uuid.Parse(request.FileName)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 				conditionPhoto := models.Photo{FileName: fileUUID}
 				photo := models.Photo{}
 				if err := db.Where(&conditionPhoto).Delete(&photo).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -380,7 +380,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}

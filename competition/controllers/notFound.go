@@ -9,6 +9,6 @@ import (
 func NotFoundHanlder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		response := gin.H{"Message": "ERROR: PATH NOT FOUND"}
-		c.JSON(http.StatusNotFound, response)
+		c.AbortWithStatusJSON(http.StatusNotFound, response)
 	}
 }

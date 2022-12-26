@@ -31,8 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
 			response := gin.H{"Message": "ERROR: NO TOKEN PROVIDED"}
-			c.JSON(http.StatusUnauthorized, response)
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -46,14 +45,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 		if err != nil {
 			response := gin.H{"Message": err.Error()}
-			c.JSON(http.StatusBadRequest, response)
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 		if !authToken.Valid {
 			response := gin.H{"Message": "CLAIMS INVALID"}
-			c.JSON(http.StatusBadRequest, response)
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 

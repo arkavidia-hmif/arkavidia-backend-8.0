@@ -62,7 +62,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 		request := SignInTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -70,13 +70,13 @@ func SignInTeamHandler() gin.HandlerFunc {
 		team := models.Team{}
 		if err := db.Where(&condition).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, []byte(request.Password)); err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -93,7 +93,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
@@ -110,14 +110,14 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		request := SignUpTeamRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
@@ -126,12 +126,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		team := models.Team{}
 		if err := db.Where(&conditionUsername).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 		if team.Username != "" {
 			response := gin.H{"Message": "ERROR: USERNAME EXISTED"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -140,12 +140,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		team = models.Team{}
 		if err := db.Where(&conditionTeamName).Find(&team).Error; err != nil {
 			response := gin.H{"Message": "ERROR: BAD REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 		if team.TeamName != "" {
 			response := gin.H{"Message": "ERROR: TEAMNAME EXISTED"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -169,8 +169,8 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			}
 			return nil
 		}); err != nil {
-			response := gin.H{"Message": err.Error()}
-			c.JSON(http.StatusBadRequest, response)
+			response := gin.H{"Message": "BAD REQUEST"}
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -187,7 +187,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
@@ -212,7 +212,7 @@ func GetTeamHandler() gin.HandlerFunc {
 				query := GetTeamQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -220,7 +220,7 @@ func GetTeamHandler() gin.HandlerFunc {
 				team := models.Team{}
 				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -235,7 +235,7 @@ func GetTeamHandler() gin.HandlerFunc {
 				team := models.Team{}
 				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -246,7 +246,7 @@ func GetTeamHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -264,7 +264,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 				query := GetAllTeamsQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -274,7 +274,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 				teams := []models.Team{}
 				if err := db.Where(&condition).Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -285,7 +285,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -303,14 +303,14 @@ func ChangePasswordHandler() gin.HandlerFunc {
 				request := ChangePasswordRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 				if err != nil {
 					response := gin.H{"Message": "ERROR: BCRYPT ERROR"}
-					c.JSON(http.StatusInternalServerError, response)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
 
@@ -319,7 +319,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 				newTeam := models.Team{HashedPassword: hashedPassword}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -330,7 +330,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -348,7 +348,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 				query := CompetitionRegistrationQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -357,7 +357,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 				newTeam := models.Team{TeamCategory: query.TeamCategory}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -368,7 +368,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -386,14 +386,14 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 				request := ChangeStatusTeamRequest{}
 				if err := c.BindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := ChangeStatusTeamQuery{}
 				if err := c.BindQuery(&query); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -402,7 +402,7 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 				newTeam := models.Team{Status: request.Status, AdminID: adminID}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.JSON(http.StatusBadRequest, response)
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -413,7 +413,7 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 		default:
 			{
 				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.JSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}

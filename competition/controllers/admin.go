@@ -27,7 +27,7 @@ func SignInAdminHandler() gin.HandlerFunc {
 		request := SignInAdminRequest{}
 		if err := c.BindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
-			c.JSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -35,13 +35,13 @@ func SignInAdminHandler() gin.HandlerFunc {
 		admin := models.Admin{}
 		if err := db.Where(&condition).Find(&admin).Error; err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(admin.HashedPassword, []byte(request.Password)); err != nil {
 			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.JSON(http.StatusUnauthorized, response)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -58,7 +58,7 @@ func SignInAdminHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
-			c.JSON(http.StatusInternalServerError, response)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
