@@ -17,41 +17,41 @@ import (
 )
 
 type SignInTeamRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,ascii"`
 }
 
 type SignUpTeamRequest struct {
-	Username string             `json:"username" binding:"required"`
-	Password string             `json:"password" binding:"required"`
-	TeamName string             `json:"team_name" binding:"required"`
-	Members  []SignUpMembership `json:"member_list" binding:"required"`
+	Username string             `json:"username" binding:"required,alphanum"`
+	Password string             `json:"password" binding:"required,ascii"`
+	TeamName string             `json:"team_name" binding:"required,ascii"`
+	Members  []SignUpMembership `json:"member_list" binding:"required,dive"`
 }
 
 type GetTeamQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required"`
+	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
 }
 
 type GetAllTeamsQuery struct {
-	Page         int                 `form:"page" field:"page" binding:"required"`
-	Size         int                 `form:"size" field:"size" binding:"required"`
-	TeamCategory models.TeamCategory `form:"team_category" field:"team_category" binding:"required"`
+	Page         int                 `form:"page" field:"page" binding:"required,gt=0"`
+	Size         int                 `form:"size" field:"size" binding:"required,gt=0"`
+	TeamCategory models.TeamCategory `form:"team_category" field:"team_category" binding:"required,oneof=competitive-programming datavidia uxvidia arkalogica"`
 }
 
 type ChangePasswordRequest struct {
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password" binding:"required,ascii"`
 }
 
 type CompetitionRegistrationQuery struct {
-	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required"`
+	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required,oneof=competitive-programming datavidia uxvidia arkalogica"`
 }
 
 type ChangeStatusTeamQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required"`
+	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
 }
 
 type ChangeStatusTeamRequest struct {
-	Status models.TeamStatus `json:"status" binding:"required"`
+	Status models.TeamStatus `json:"status" binding:"required,oneof=waiting-for-evaluation passed eliminated"`
 }
 
 func SignInTeamHandler() gin.HandlerFunc {
@@ -60,7 +60,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 
 		request := SignInTeamRequest{}
-		if err := c.BindJSON(&request); err != nil {
+		if err := c.ShouldBindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
@@ -108,7 +108,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 
 		request := SignUpTeamRequest{}
-		if err := c.BindJSON(&request); err != nil {
+		if err := c.ShouldBindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
@@ -301,7 +301,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := ChangePasswordRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -384,7 +384,7 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 		case middlewares.Admin:
 			{
 				request := ChangeStatusTeamRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return

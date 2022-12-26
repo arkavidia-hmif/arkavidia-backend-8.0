@@ -15,8 +15,8 @@ import (
 )
 
 type SignInAdminRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,ascii"`
 }
 
 func SignInAdminHandler() gin.HandlerFunc {
@@ -25,7 +25,7 @@ func SignInAdminHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 
 		request := SignInAdminRequest{}
-		if err := c.BindJSON(&request); err != nil {
+		if err := c.ShouldBindJSON(&request); err != nil {
 			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return

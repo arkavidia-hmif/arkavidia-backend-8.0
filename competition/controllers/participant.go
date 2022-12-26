@@ -13,23 +13,23 @@ import (
 )
 
 type GetMemberQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required"`
+	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
 }
 
 type GetAllMembersQuery struct {
-	Page int `form:"page" field:"page" binding:"required"`
-	Size int `form:"size" field:"size" binding:"required"`
+	Page int `form:"page" field:"page" binding:"required,gt=0"`
+	Size int `form:"size" field:"size" binding:"required,gt=0"`
 }
 
 type AddMemberRequest struct {
-	Name           string                `json:"name" binding:"required"`
-	Email          string                `json:"email" binding:"required"`
+	Name           string                `json:"name" binding:"required,ascii"`
+	Email          string                `json:"email" binding:"required,email"`
 	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
-	Role           models.MembershipRole `json:"role" binding:"required"`
+	Role           models.MembershipRole `json:"role" binding:"required,oneof=leader member"`
 }
 
 type ChangeCareerInterestQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
 }
 
 type ChangeCareerInterestRequest struct {
@@ -37,23 +37,23 @@ type ChangeCareerInterestRequest struct {
 }
 
 type ChangeRoleQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
 }
 
 type ChangeRoleRequest struct {
-	Role models.MembershipRole `json:"role" binding:"required"`
+	Role models.MembershipRole `json:"role" binding:"required,oneof=leader member"`
 }
 
 type ChangeStatusParticipantQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
 }
 
 type ChangeStatusParticipantRequest struct {
-	Status models.ParticipantStatus `json:"status" binding:"required"`
+	Status models.ParticipantStatus `json:"status" binding:"required,oneof=waiting-for-verification verified declined"`
 }
 
 type DeleteMemberRequest struct {
-	ParticipantID uint `json:"participant_id" binding:"required"`
+	ParticipantID uint `json:"participant_id" binding:"required,gt=0"`
 }
 
 func GetMemberHandler() gin.HandlerFunc {
@@ -192,7 +192,7 @@ func AddMemberHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := AddMemberRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -245,7 +245,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := ChangeCareerInterestRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -298,7 +298,7 @@ func ChangeRoleHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := ChangeRoleRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -343,7 +343,7 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := ChangeStatusParticipantRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -387,7 +387,7 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := DeleteMemberRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return

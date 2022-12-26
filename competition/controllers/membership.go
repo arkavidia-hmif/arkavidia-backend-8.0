@@ -7,8 +7,8 @@ import (
 )
 
 type SignUpMembership struct {
-	Name           string                `json:"name" binding:"required"`
-	Email          string                `json:"email" binding:"required"`
+	Name           string                `json:"name" binding:"required,ascii"`
+	Email          string                `json:"email" binding:"required,email"`
 	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
-	Role           models.MembershipRole `json:"role" binding:"required"`
+	Role           models.MembershipRole `json:"role" binding:"required,oneof=leader member"`
 }

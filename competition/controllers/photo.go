@@ -19,36 +19,36 @@ import (
 )
 
 type GetPhotoQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required"`
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
 }
 
 type GetAllPhotosQuery struct {
-	Page int `form:"page" field:"page" binding:"required"`
-	Size int `form:"size" field:"size" binding:"required"`
+	Page int `form:"page" field:"page" binding:"required,gt=0"`
+	Size int `form:"size" field:"size" binding:"required,gt=0"`
 }
 
 type DownloadPhotoQuery struct {
-	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required"`
+	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
 }
 
 type AddPhotoRequest struct {
-	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required"`
-	Type          models.PhotoType      `form:"type" field:"type" binding:"required"`
+	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
+	Type          models.PhotoType      `form:"type" field:"type" binding:"required,oneof=pribadi kartu-pelajar bukti-mahasiswa-aktif bukti-pembayaran"`
 	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
 }
 
 type ChangeStatusPhotoQuery struct {
-	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required"`
+	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
 }
 
 type ChangeStatusPhotoRequest struct {
-	Status models.PhotoStatus `json:"status" binding:"required"`
+	Status models.PhotoStatus `json:"status" binding:"required,oneof=waiting-for-approval approved denied"`
 }
 
 type DeletePhotoRequest struct {
-	ParticipantID uint   `json:"participant_id" binding:"required"`
-	FileName      string `json:"file_name" binding:"required"`
-	FileExtension string `json:"file_extension" binding:"required"`
+	ParticipantID uint   `json:"participant_id" binding:"required,gt=0"`
+	FileName      string `json:"file_name" binding:"required,uuid"`
+	FileExtension string `json:"file_extension" binding:"required,alpha"`
 }
 
 func GetPhotoHandler() gin.HandlerFunc {
@@ -299,7 +299,7 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 		case middlewares.Admin:
 			{
 				request := ChangeStatusPhotoRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
@@ -344,7 +344,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		case middlewares.Team:
 			{
 				request := DeletePhotoRequest{}
-				if err := c.BindJSON(&request); err != nil {
+				if err := c.ShouldBindJSON(&request); err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return

@@ -29,27 +29,27 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Gin Framework
-	r := gin.Default()
+	engine := gin.Default()
 
 	// Setup Validator
 	binding.Validator = validation.Validator
 
 	// Middlewares
-	r.Use(middlewares.CORSMiddleware())
-	r.Use(gzip.Gzip(gzip.DefaultCompression))
+	engine.Use(middlewares.CORSMiddleware())
+	engine.Use(gzip.Gzip(gzip.DefaultCompression))
 
 	// Routes
-	routes.AdminRoute(r)
-	routes.TeamRoute(r)
-	routes.ParticipantRoute(r)
-	routes.SubmissionRoute(r)
-	routes.PhotoRoute(r)
-	routes.NotFoundRoute(r)
+	routes.AdminRoute(engine)
+	routes.TeamRoute(engine)
+	routes.ParticipantRoute(engine)
+	routes.SubmissionRoute(engine)
+	routes.PhotoRoute(engine)
+	routes.NotFoundRoute(engine)
 
 	// Goroutine Worker
 	configMessage := messageConfig.Config.GetMetadata()
 	go mail.Broker.RunMailWorker(configMessage.WorkerSize)
 
 	// Run App
-	r.Run()
+	engine.Run()
 }
