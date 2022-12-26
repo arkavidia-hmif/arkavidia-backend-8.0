@@ -22,10 +22,10 @@ type GetAllMembersQuery struct {
 }
 
 type AddMemberRequest struct {
-	Name           string                `json:"name" binding:"required,ascii"`
-	Email          string                `json:"email" binding:"required,email"`
-	CareerInterest pq.StringArray        `json:"career_interest" binding:"required"`
-	Role           models.MembershipRole `json:"role" binding:"required,oneof=leader member"`
+	Name            string                             `json:"name" binding:"required,ascii"`
+	Email           string                             `json:"email" binding:"required,email"`
+	CareerInterests []models.ParticipantCareerInterest `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
+	Role            models.MembershipRole              `json:"role" binding:"required,oneof=leader member"`
 }
 
 type ChangeCareerInterestQuery struct {
@@ -33,7 +33,7 @@ type ChangeCareerInterestQuery struct {
 }
 
 type ChangeCareerInterestRequest struct {
-	CareerInterest pq.StringArray `json:"career_interest" binding:"required"`
+	CareerInterests []models.ParticipantCareerInterest `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
 }
 
 type ChangeRoleQuery struct {
@@ -201,7 +201,12 @@ func AddMemberHandler() gin.HandlerFunc {
 				participant := models.Participant{}
 				membership := models.Membership{}
 				if err := db.Transaction(func(tx *gorm.DB) error {
-					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterest, Status: models.WaitingForVerification}
+					var pqStringArray pq.StringArray
+					for _, CareerInterest := range request.CareerInterests {
+						pqStringArray = append(pqStringArray, string(CareerInterest))
+					}
+
+					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: pqStringArray, Status: models.WaitingForVerification}
 					if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 						return err
 					}
@@ -267,8 +272,13 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 					return
 				}
 
+				var pqStringArray pq.StringArray
+				for _, CareerInterest := range request.CareerInterests {
+					pqStringArray = append(pqStringArray, string(CareerInterest))
+				}
+
 				oldParticipant := models.Participant{Model: gorm.Model{ID: query.ParticipantID}}
-				newParticipant := models.Participant{CareerInterest: request.CareerInterest}
+				newParticipant := models.Participant{CareerInterest: pqStringArray}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)

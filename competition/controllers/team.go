@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -156,7 +157,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			}
 
 			for _, member := range request.Members {
-				conditionParticipant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterest, Status: models.WaitingForVerification}
+				var pqStringArray pq.StringArray
+				for _, CareerInterest := range member.CareerInterests {
+					pqStringArray = append(pqStringArray, string(CareerInterest))
+				}
+
+				conditionParticipant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: pqStringArray, Status: models.WaitingForVerification}
 				participant := models.Participant{}
 				if err := tx.FirstOrCreate(&participant, &conditionParticipant).Error; err != nil {
 					return err
