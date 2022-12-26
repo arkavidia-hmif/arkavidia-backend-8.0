@@ -13,6 +13,7 @@ import (
 // TODO: Tambahkan cache layer pada route dengan method GET
 // REFERENCE: https://github.com/gin-contrib/cache
 // ASSIGNED TO: @patrickamadeus
+// STATUS: DONE
 
 type LocalCache struct {
 	store *persistence.InMemoryStore

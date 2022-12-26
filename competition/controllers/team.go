@@ -33,8 +33,9 @@ type GetTeamQuery struct {
 }
 
 type GetAllTeamsQuery struct {
-	Page int `form:"page" field:"page" binding:"required"`
-	Size int `form:"size" field:"size" binding:"required"`
+	Page         int                 `form:"page" field:"page" binding:"required"`
+	Size         int                 `form:"size" field:"size" binding:"required"`
+	TeamCategory models.TeamCategory `form:"team_category" field:"team_category" binding:"required"`
 }
 
 type ChangePasswordRequest struct {
@@ -269,8 +270,9 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 
 				offset := (query.Page - 1) * query.Size
 				limit := query.Size
+				condition := models.Team{TeamCategory: query.TeamCategory}
 				teams := []models.Team{}
-				if err := db.Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
+				if err := db.Where(&condition).Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
 					response := gin.H{"Message": "ERROR: BAD REQUEST"}
 					c.JSON(http.StatusBadRequest, response)
 					return

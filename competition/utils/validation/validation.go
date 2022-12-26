@@ -9,6 +9,11 @@ import (
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
+// TODO: Tambahkan validasi payload request dengan menggunakan validator
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
+// ASSIGNED TO: @rayhankinan
+// STATUS: IN PROGRESS
+
 type CustomValidator struct {
 	validate *validator.Validate
 	once     sync.Once

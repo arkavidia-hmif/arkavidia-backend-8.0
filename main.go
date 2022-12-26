@@ -19,11 +19,6 @@ import (
 // ASSIGNED TO: @rayhankinan
 // STATUS: DONE
 
-// TODO: Tambahkan validasi payload request dengan menggunakan validator
-// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
-// ASSIGNED TO: @rayhankinan
-// STATUS: IN PROGRESS
-
 // TODO: Tambahkan secure middleware untuk menambah security
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-secure-middleware.html
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-https-tls.html
