@@ -16,6 +16,7 @@ import (
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
+	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 type GetSubmissionQuery struct {
@@ -45,49 +46,69 @@ func GetSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[[]models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				query := GetSubmissionQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				condition := models.Submission{TeamID: query.TeamID}
 				submissions := []models.Submission{}
 				if err := db.Where(&condition).Find(&submissions).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				response.Data = submissions
+				response.URL = fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		case middlewares.Team:
 			{
-				teamID := c.MustGet("id").(uint)
-				condition := models.Submission{TeamID: teamID}
-				submissions := []models.Submission{}
-				if err := db.Where(&condition).Find(&submissions).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": submissions, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
-				c.JSON(http.StatusOK, response)
+				teamID := value.(uint)
+				condition := models.Submission{TeamID: teamID}
+				submissions := []models.Submission{}
+				if err := db.Where(&condition).Find(&submissions).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				response.Message = "SUCCESS"
+				response.Data = submissions
+				response.URL = fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -97,15 +118,25 @@ func GetSubmissionHandler() gin.HandlerFunc {
 func GetAllSubmissionsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		config := storageConfig.Config.GetMetadata()
+		response := sanitizer.Response[[]models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				query := GetAllSubmissionsQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
@@ -114,19 +145,21 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 				submissions := []models.Submission{}
 
 				if err := db.Offset(offset).Limit(limit).Find(&submissions).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": submissions}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				response.Data = submissions
+				response.URL = fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -137,39 +170,48 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				query := DownloadSubmissionQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				conditionSubmission := models.Submission{Model: gorm.Model{ID: query.SubmissionID}}
+				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}}
 				submission := models.Submission{}
-				if err := db.Where(&conditionSubmission).Find(&submission).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := db.Where(&condition).Find(&submission).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
 				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				var content []byte
 				length, err := IOWriter.Write(content)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 
@@ -180,22 +222,66 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				c.Header("Accept-Length", fmt.Sprintf("%d", length))
 				c.Writer.Write(content)
 
-				response := gin.H{"Message": "SUCCESS"}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		case middlewares.Team:
 			{
-				// TODO: Tambahkan handler untuk download photo team
-				// ASSIGNED TO: @rayhankinan
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				query := DownloadSubmissionQuery{}
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
+				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}, TeamID: teamID}
+				submission := models.Submission{}
+				if err := db.Where(&condition).Find(&submission).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
+				if err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				var content []byte
+				length, err := IOWriter.Write(content)
+				if err != nil {
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				c.Header("Content-Description", "File Transfer")
+				c.Header("Content-Transfer-Encoding", "binary")
+				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+				c.Header("Content-Type", "application/octet-stream")
+				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Writer.Write(content)
+
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -206,22 +292,31 @@ func AddSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Team:
 			{
 				request := AddSubmissionRequest{}
-				if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindWith(&request, binding.FormMultipart); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				openedFile, err := request.File.Open()
 				if err != nil {
-					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: FILE CANNOT BE ACCESSED"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 				defer openedFile.Close()
@@ -229,28 +324,37 @@ func AddSubmissionHandler() gin.HandlerFunc {
 				fileUUID := uuid.New()
 				fileExt := filepath.Ext(request.File.Filename)
 
-				teamID := c.MustGet("id").(uint)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
 				submission := models.Submission{FileName: fileUUID, FileExtension: fileExt, TeamID: teamID, Stage: request.Stage}
 				if err := db.Create(&submission).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.SubmissionDir, openedFile); err != nil {
-					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": submission, "URL": fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)}
-				c.JSON(http.StatusCreated, response)
+				response.Message = "SUCCESS"
+				response.Data = submission
+				response.URL = fmt.Sprintf("%s/%s/%s/", config.StorageHost, config.BucketName, config.SubmissionDir)
+				c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -260,43 +364,58 @@ func AddSubmissionHandler() gin.HandlerFunc {
 func DeleteSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Team:
 			{
-				teamID := c.MustGet("id").(uint)
-
 				request := DeleteSubmissionRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				fileUUID, err := uuid.Parse(request.FileName)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: INVALID FILENAME"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
 				condition := models.Submission{FileName: fileUUID, TeamID: teamID}
 				submission := models.Submission{}
 				if err := db.Where(&condition).Delete(&submission).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS"}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}

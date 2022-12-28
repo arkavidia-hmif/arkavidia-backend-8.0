@@ -45,7 +45,7 @@ func (teamStatus TeamStatus) Value() (driver.Value, error) {
 type Team struct {
 	gorm.Model
 	Username       string       `json:"username" gorm:"not null;unique"`
-	HashedPassword []byte       `json:"password" gorm:"not null"`
+	HashedPassword []byte       `json:"password" gorm:"not null" visibility:"false"`
 	TeamName       string       `json:"team_name" gorm:"not null;unique"`
 	TeamCategory   TeamCategory `json:"team_category" gorm:"type:team_category;default:null"`
 	AdminID        uint         `json:"admin_id" gorm:"default:null"`

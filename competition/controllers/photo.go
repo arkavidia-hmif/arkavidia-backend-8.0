@@ -16,6 +16,7 @@ import (
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
+	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 type GetPhotoQuery struct {
@@ -27,8 +28,13 @@ type GetAllPhotosQuery struct {
 	Size int `form:"size" field:"size" binding:"required,gt=0"`
 }
 
-type DownloadPhotoQuery struct {
+type AdminDownloadPhotoQuery struct {
 	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
+}
+
+type TeamDownloadPhotoQuery struct {
+	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
+	PhotoID       uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
 }
 
 type AddPhotoRequest struct {
@@ -55,64 +61,84 @@ func GetPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[[]models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				query := GetPhotoQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				conditionPhoto := models.Photo{ParticipantID: query.ParticipantID}
 				photos := []models.Photo{}
 				if err := db.Where(&conditionPhoto).Find(&photos).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "Success", "Data": photos, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				response.Data = photos
+				response.URL = fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		case middlewares.Team:
 			{
 				query := GetPhotoQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				teamID := c.MustGet("id").(uint)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
 				conditionMembership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
-				membership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
+				membership := models.Membership{}
 				if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				conditionPhoto := models.Photo{ParticipantID: query.ParticipantID}
 				photos := []models.Photo{}
 				if err := db.Where(&conditionPhoto).Find(&photos).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "Success", "Data": photos, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				response.Data = photos
+				response.URL = fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -122,15 +148,24 @@ func GetPhotoHandler() gin.HandlerFunc {
 func GetAllPhotosHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[[]models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				query := GetAllPhotosQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
@@ -139,19 +174,20 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 				photos := []models.Photo{}
 
 				if err := db.Offset(offset).Limit(limit).Find(&photos).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": photos}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				response.Data = photos
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -162,39 +198,48 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
-				query := DownloadPhotoQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				query := AdminDownloadPhotoQuery{}
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				conditionPhoto := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
+				condition := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
 				photo := models.Photo{}
-				if err := db.Where(&conditionPhoto).Find(&photo).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := db.Where(&condition).Find(&photo).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				filename := fmt.Sprintf("%s.%s", photo.FileName, photo.FileExtension)
 				IOWriter, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				var content []byte
 				length, err := IOWriter.Write(content)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: INTERNAL SERVER ERROR"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 
@@ -205,22 +250,74 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 				c.Header("Accept-Length", fmt.Sprintf("%d", length))
 				c.Writer.Write(content)
 
-				response := gin.H{"Message": "SUCCESS"}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		case middlewares.Team:
 			{
-				// TODO: Tambahkan handler untuk download photo team
-				// ASSIGNED TO: @rayhankinan
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				query := TeamDownloadPhotoQuery{}
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
+				conditionMembership := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
+				membership := models.Membership{}
+				if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				conditionPhoto := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
+				photo := models.Photo{}
+				if err := db.Where(&conditionPhoto).Find(&photo).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				filename := fmt.Sprintf("%s.%s", photo.FileName, photo.FileExtension)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
+				if err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				var content []byte
+				length, err := IOWriter.Write(content)
+				if err != nil {
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				c.Header("Content-Description", "File Transfer")
+				c.Header("Content-Transfer-Encoding", "binary")
+				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+				c.Header("Content-Type", "application/octet-stream")
+				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Writer.Write(content)
+
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -231,31 +328,47 @@ func AddPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := storageConfig.Config.GetMetadata()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Team:
 			{
 				request := AddPhotoRequest{}
-				if err := c.MustBindWith(&request, binding.FormMultipart); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindWith(&request, binding.FormMultipart); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				teamID := c.MustGet("id").(uint)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
 				condition := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				openedFile, err := request.File.Open()
 				if err != nil {
-					response := gin.H{"Message": "ERROR: FILE CANNOT BE ACCESSED"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: FILE CANNOT BE ACCESSED"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 				defer openedFile.Close()
@@ -265,25 +378,27 @@ func AddPhotoHandler() gin.HandlerFunc {
 
 				photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForApproval, Type: request.Type}
 				if err := db.Create(&photo).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				if err := storageService.Client.UploadFile(fmt.Sprintf("%s%s", fileUUID, fileExt), config.PhotoDir, openedFile); err != nil {
-					response := gin.H{"Message": "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"}
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					response.Message = "ERROR: GOOGLE CLOUD STORAGE CANNOT BE ACCESSED"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS", "Data": photo, "URL": fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)}
-				c.JSON(http.StatusCreated, response)
+				response.Message = "SUCCESS"
+				response.Data = photo
+				response.URL = fmt.Sprintf("%s/%s/%s", config.StorageHost, config.BucketName, config.PhotoDir)
+				c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -293,42 +408,58 @@ func AddPhotoHandler() gin.HandlerFunc {
 func ChangeStatusPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Admin:
 			{
 				request := ChangeStatusPhotoRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				query := ChangeStatusPhotoQuery{}
-				if err := c.BindQuery(&query); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				adminID := c.MustGet("id").(uint)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				adminID := value.(uint)
 				oldPhoto := models.Photo{Model: gorm.Model{ID: query.PhotoID}}
 				newPhoto := models.Photo{Status: request.Status, AdminID: adminID}
 				if err := db.Where(&oldPhoto).Updates(&newPhoto).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS"}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}
@@ -338,49 +469,65 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 func DeletePhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		role := c.MustGet("role").(middlewares.AuthRole)
+		response := sanitizer.Response[models.Photo]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
 
 		switch role {
 		case middlewares.Team:
 			{
 				request := DeletePhotoRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				teamID := c.MustGet("id").(uint)
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					return
+				}
+
+				teamID := value.(uint)
 				conditionMembership := models.Membership{TeamID: teamID, ParticipantID: request.ParticipantID}
 				membership := models.Membership{}
 				if err := db.Where(&conditionMembership).Find(&membership).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
 				fileUUID, err := uuid.Parse(request.FileName)
 				if err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: INVALID FILENAME"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 					return
 				}
 				conditionPhoto := models.Photo{FileName: fileUUID}
 				photo := models.Photo{}
 				if err := db.Where(&conditionPhoto).Delete(&photo).Error; err != nil {
-					response := gin.H{"Message": "ERROR: BAD REQUEST"}
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				response := gin.H{"Message": "SUCCESS"}
-				c.JSON(http.StatusOK, response)
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
 				return
 			}
 		default:
 			{
-				response := gin.H{"Message": "ERROR: INVALID ROLE"}
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 				return
 			}
 		}

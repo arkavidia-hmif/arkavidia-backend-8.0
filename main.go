@@ -23,6 +23,7 @@ import (
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-secure-middleware.html
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-https-tls.html
 // ASSIGNED TO: @rayhankinan
+// STATUS: IN PROGRESS
 
 func main() {
 	// Configure runtime

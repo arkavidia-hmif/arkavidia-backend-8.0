@@ -12,6 +12,7 @@ import (
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
+	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 type SignInAdminRequest struct {
@@ -23,25 +24,26 @@ func SignInAdminHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := authConfig.Config.GetMetadata()
+		response := sanitizer.Response[string]{}
 
 		request := SignInAdminRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
-			response := gin.H{"Message": "ERROR: INCOMPLETE REQUEST"}
-			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			response.Message = "ERROR: BAD REQUEST"
+			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 			return
 		}
 
 		condition := models.Admin{Username: request.Username}
 		admin := models.Admin{}
 		if err := db.Where(&condition).Find(&admin).Error; err != nil {
-			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			response.Message = "ERROR: INVALID USERNAME"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(admin.HashedPassword, []byte(request.Password)); err != nil {
-			response := gin.H{"Message": "ERROR: INVALID USERNAME OR PASSWORD"}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			response.Message = "ERROR: INVALID PASSWORD"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
 			return
 		}
 
@@ -57,12 +59,13 @@ func SignInAdminHandler() gin.HandlerFunc {
 		unsignedAuthToken := jwt.NewWithClaims(config.JWTSigningMethod, adminClaims)
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
-			response := gin.H{"Message": "ERROR: JWT SIGNING ERROR"}
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+			response.Message = "ERROR: JWT SIGNING ERROR"
+			c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
 			return
 		}
 
-		response := gin.H{"Message": "SUCCESS", "Data": signedAuthToken}
-		c.JSON(http.StatusCreated, response)
+		response.Message = "SUCCESS"
+		response.Data = signedAuthToken
+		c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
 	}
 }

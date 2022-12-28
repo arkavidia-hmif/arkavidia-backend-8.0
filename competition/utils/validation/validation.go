@@ -12,7 +12,7 @@ import (
 // TODO: Tambahkan validasi payload request dengan menggunakan validator
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-request-payload-validation.html
 // ASSIGNED TO: @rayhankinan
-// STATUS: IN PROGRESS
+// STATUS: DONE
 
 type CustomValidator struct {
 	validate *validator.Validate

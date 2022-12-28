@@ -46,6 +46,7 @@ func (mailBroker *MailBroker) sendMailToClient(ctx context.Context, mailParamete
 		// TODO: Gunakan templating HTML static file sebagai body email
 		// REFERENCE: https://dasarpemrogramangolang.novalagung.com/B-template-render-html.html
 		// ASSIGNED TO: @samuelswandi
+		// STATUS: IN PROGRESS
 
 		config := mailConfig.Config.GetMetadata()
 
