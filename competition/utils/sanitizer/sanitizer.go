@@ -3,7 +3,7 @@ package sanitizer
 // TODO: Tambahkan fungsi dengan menggunakan reflection untuk mengecek apakah relation dibutuhkan atau tidak
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/A-reflect.html
 // ASSIGNED TO: @graceclaudia19
-// STATUS: IN PROGRESS
+// STATUS: DONE
 
 import (
 	"reflect"
