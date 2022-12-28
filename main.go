@@ -41,7 +41,7 @@ import (
 
 // TODO: Tambahkan hash pada semua ID di model untuk mencegah terjadinya IDOR
 // REFERENCE: https://www.securecoding.com/blog/how-to-prevent-idor-attacks/
-// ASSIGNED TO:
+// ASSIGNED TO: @akbarmridho
 // STATUS: IN PROGRESS
 
 func main() {
