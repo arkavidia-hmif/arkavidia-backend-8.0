@@ -7,6 +7,8 @@ package sanitizer
 
 import (
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -62,9 +64,9 @@ func SanitizeStruct(obj interface{}) map[string]interface{} {
 		childObjValue := objValue.Field(i)
 		childObjType := objType.Field(i)
 
-		key := childObjType.Tag.Get("json")
-		if childObjType.Tag.Get("json") == "" {
-			key = childObjType.Name
+		key := ToSnakeCase(childObjType.Tag.Get("json"))
+		if key == "" {
+			key = ToSnakeCase(childObjType.Name)
 		}
 
 		if childObjType.Tag.Get("visibility") != "false" && childObjValue.CanInterface() && !reflect.DeepEqual(childObjValue.Interface(), reflect.Zero(childObjValue.Type()).Interface()) {
@@ -106,4 +108,12 @@ func KindOfData(obj interface{}) reflect.Kind {
 	}
 
 	return objValueKind
+}
+
+func ToSnakeCase(str string) string {
+	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
+	snakeCase := strings.ToLower(matchAllCap.ReplaceAllString(matchFirstCap.ReplaceAllString(str, "${1}_${2}"), "${1}_${2}"))
+
+	return snakeCase
 }
