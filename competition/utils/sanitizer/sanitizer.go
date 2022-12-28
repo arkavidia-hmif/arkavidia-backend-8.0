@@ -7,6 +7,7 @@ package sanitizer
 
 import (
 	"reflect"
+	"time"
 )
 
 type Response[T interface{}] struct {
@@ -24,13 +25,22 @@ func SanitizeArray(obj interface{}) []interface{} {
 
 		if childObjValue.CanInterface() && !reflect.DeepEqual(childObjValue.Interface(), reflect.Zero(childObjValue.Type()).Interface()) {
 			switch childObjValue.Kind() {
-			case reflect.Array:
+			case reflect.Slice:
 				{
 					responses = append(responses, SanitizeArray(childObjValue.Interface())...)
 				}
 			case reflect.Struct:
 				{
-					responses = append(responses, SanitizeStruct(childObjValue.Interface()))
+					switch childObjValue.Interface().(type) {
+					case time.Time:
+						{
+							responses = append(responses, childObjValue.Interface())
+						}
+					default:
+						{
+							responses = append(responses, SanitizeStruct(childObjValue.Interface()))
+						}
+					}
 				}
 			default:
 				{
@@ -52,23 +62,36 @@ func SanitizeStruct(obj interface{}) map[string]interface{} {
 		childObjValue := objValue.Field(i)
 		childObjType := objType.Field(i)
 
-		if childObjType.Tag.Get("json") != "" && childObjType.Tag.Get("visibility") != "false" && childObjValue.CanInterface() && !reflect.DeepEqual(childObjValue.Interface(), reflect.Zero(childObjValue.Type()).Interface()) {
+		key := childObjType.Tag.Get("json")
+		if childObjType.Tag.Get("json") == "" {
+			key = childObjType.Name
+		}
+
+		if childObjType.Tag.Get("visibility") != "false" && childObjValue.CanInterface() && !reflect.DeepEqual(childObjValue.Interface(), reflect.Zero(childObjValue.Type()).Interface()) {
 			switch childObjValue.Kind() {
 			case reflect.Slice:
 				{
-					response[childObjType.Tag.Get("json")] = SanitizeArray(childObjValue.Interface())
+					response[key] = SanitizeArray(childObjValue.Interface())
 				}
 			case reflect.Struct:
 				{
-					response[childObjType.Tag.Get("json")] = SanitizeStruct(childObjValue.Interface())
+					switch childObjValue.Interface().(type) {
+					case time.Time:
+						{
+							response[key] = childObjValue.Interface()
+						}
+					default:
+						{
+							response[key] = SanitizeStruct(childObjValue.Interface())
+						}
+					}
 				}
 			default:
 				{
-					response[childObjType.Tag.Get("json")] = childObjValue.Interface()
+					response[key] = childObjValue.Interface()
 				}
 			}
 		}
-
 	}
 
 	return response
