@@ -22,7 +22,26 @@ import (
 // TODO: Tambahkan secure middleware untuk menambah security
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-secure-middleware.html
 // REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-https-tls.html
-// ASSIGNED TO: @rayhankinan
+// NOTES DARI GARE: Pake openssl aja buat generate certificate
+// ASSIGNED TO: @confusionhill
+// STATUS: IN PROGRESS
+
+// TODO: Tambahkan route render photo dan submission untuk menghindari akses ke google cloud storage secara langsung
+// REFERENCE: https://zetcode.com/golang/http-serve-image/
+// REFERENCE: https://stackoverflow.com/questions/26744814/serve-image-in-go-that-was-just-created
+// REFERENCE: https://freshman.tech/snippets/go/file-content-type/
+// REFERENCE: https://stackoverflow.com/questions/51209439/mime-type-checking-of-files-uploaded-golang
+// ASSIGNED TO: @patrickamadeus
+// STATUS: IN PROGRESS
+
+// TODO: Gunakan GormValuerInterface untuk mengautomatisasi enkripsi bcrypt password
+// REFERENCE: https://gorm.io/docs/data_types.html#GormValuerInterface
+// ASSIGNED TO: @graceclaudia19
+// STATUS: IN PROGRESS
+
+// TODO: Tambahkan hash pada semua ID di model untuk mencegah terjadinya IDOR
+// REFERENCE: https://www.securecoding.com/blog/how-to-prevent-idor-attacks/
+// ASSIGNED TO:
 // STATUS: IN PROGRESS
 
 func main() {
