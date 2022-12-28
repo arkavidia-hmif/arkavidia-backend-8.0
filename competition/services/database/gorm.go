@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -25,6 +26,10 @@ func (database *Database) lazyInit() {
 
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),
+			NowFunc: func() time.Time {
+				return time.Now().Local()
+			},
+			PrepareStmt: true,
 		})
 		if err != nil {
 			panic(err)

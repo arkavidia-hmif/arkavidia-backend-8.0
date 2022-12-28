@@ -10,7 +10,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/uuid v1.3.0
-	github.com/lib/pq v1.10.7
 	golang.org/x/crypto v0.4.0
 	golang.org/x/sync v0.1.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -46,6 +45,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/memcachier/mc/v3 v3.0.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

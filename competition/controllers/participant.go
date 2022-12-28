@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	"arkavidia-backend-8.0/competition/middlewares"
@@ -23,10 +22,10 @@ type GetAllMembersQuery struct {
 }
 
 type AddMemberRequest struct {
-	Name            string                             `json:"name" binding:"required,ascii"`
-	Email           string                             `json:"email" binding:"required,email"`
-	CareerInterests []models.ParticipantCareerInterest `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
-	Role            models.MembershipRole              `json:"role" binding:"required,oneof=leader member"`
+	Name            string                            `json:"name" binding:"required,ascii"`
+	Email           string                            `json:"email" binding:"required,email"`
+	CareerInterests models.ParticipantCareerInterests `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
+	Role            models.MembershipRole             `json:"role" binding:"required,oneof=leader member"`
 }
 
 type ChangeCareerInterestQuery struct {
@@ -34,7 +33,7 @@ type ChangeCareerInterestQuery struct {
 }
 
 type ChangeCareerInterestRequest struct {
-	CareerInterests []models.ParticipantCareerInterest `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
+	CareerInterests models.ParticipantCareerInterests `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
 }
 
 type ChangeRoleQuery struct {
@@ -247,12 +246,7 @@ func AddMemberHandler() gin.HandlerFunc {
 				participant := models.Participant{}
 				membership := models.Membership{}
 				if err := db.Transaction(func(tx *gorm.DB) error {
-					var pqStringArray pq.StringArray
-					for _, CareerInterest := range request.CareerInterests {
-						pqStringArray = append(pqStringArray, string(CareerInterest))
-					}
-
-					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: pqStringArray, Status: models.WaitingForVerification}
+					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterests, Status: models.WaitingForVerification}
 					if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 						return err
 					}
@@ -334,13 +328,8 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 					return
 				}
 
-				var pqStringArray pq.StringArray
-				for _, CareerInterest := range request.CareerInterests {
-					pqStringArray = append(pqStringArray, string(CareerInterest))
-				}
-
 				oldParticipant := models.Participant{Model: gorm.Model{ID: query.ParticipantID}}
-				newParticipant := models.Participant{CareerInterest: pqStringArray}
+				newParticipant := models.Participant{CareerInterest: request.CareerInterests}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))

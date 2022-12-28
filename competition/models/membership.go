@@ -23,11 +23,15 @@ func (membershipRole MembershipRole) Value() (driver.Value, error) {
 	return string(membershipRole), nil
 }
 
+func (MembershipRole) GormDataType() string {
+	return "membership_role"
+}
+
 type Membership struct {
 	gorm.Model
 	TeamID        uint           `json:"team_id" gorm:"uniqueIndex:membership_index"`
 	ParticipantID uint           `json:"participant_id" gorm:"uniqueIndex:membership_index"`
-	Role          MembershipRole `json:"role" gorm:"type:membership_role;not null"`
+	Role          MembershipRole `json:"role" gorm:"not null"`
 	Team          Team           `json:"team" gorm:"foreignKey:TeamID;references:ID"`
 	Participant   Participant    `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
 }

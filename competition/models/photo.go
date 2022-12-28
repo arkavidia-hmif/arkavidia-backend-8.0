@@ -25,6 +25,10 @@ func (photoStatus PhotoStatus) Value() (driver.Value, error) {
 	return string(photoStatus), nil
 }
 
+func (PhotoStatus) GormDataType() string {
+	return "photo_status"
+}
+
 type PhotoType string
 
 const (
@@ -43,14 +47,18 @@ func (photoType PhotoType) Value() (driver.Value, error) {
 	return string(photoType), nil
 }
 
+func (PhotoType) GormDataType() string {
+	return "photo_type"
+}
+
 type Photo struct {
 	gorm.Model
 	FileName      uuid.UUID   `json:"file_name" gorm:"type:uuid;unique"`
 	FileExtension string      `json:"file_extension" gorm:"not null"`
 	ParticipantID uint        `json:"participant_id" gorm:"not null"`
 	AdminID       uint        `json:"admin_id" gorm:"default:null"`
-	Status        PhotoStatus `json:"status" gorm:"type:photo_status;not null"`
-	Type          PhotoType   `json:"type" gorm:"type:photo_type;not null"`
+	Status        PhotoStatus `json:"status" gorm:"not null"`
+	Type          PhotoType   `json:"type" gorm:"not null"`
 	Participant   Participant `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
 	ApprovedBy    Admin       `json:"admin" gorm:"foreignKey:AdminID;references:ID"`
 }

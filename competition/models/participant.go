@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql/driver"
 
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +32,31 @@ func (participantCareerInterest ParticipantCareerInterest) Value() (driver.Value
 	return string(participantCareerInterest), nil
 }
 
+func (ParticipantCareerInterest) GormDataType() string {
+	return "participant_career_interest"
+}
+
+type ParticipantCareerInterests []ParticipantCareerInterest
+
+func (participantCareerInterests *ParticipantCareerInterests) Scan(values []interface{}) error {
+	for _, value := range values {
+		*participantCareerInterests = append(*participantCareerInterests, ParticipantCareerInterest(value.(string)))
+	}
+	return nil
+}
+
+func (participantCareerInterests ParticipantCareerInterests) Value() (driver.Value, error) {
+	var values []string
+	for _, participantCareerInterest := range participantCareerInterests {
+		values = append(values, string(participantCareerInterest))
+	}
+	return values, nil
+}
+
+func (ParticipantCareerInterests) GormDataType() string {
+	return "participant_career_interest[]"
+}
+
 type ParticipantStatus string
 
 const (
@@ -50,12 +74,16 @@ func (participantStatus ParticipantStatus) Value() (driver.Value, error) {
 	return string(participantStatus), nil
 }
 
+func (ParticipantStatus) GormDataType() string {
+	return "participant_status"
+}
+
 type Participant struct {
 	gorm.Model
-	Name           string            `json:"name" gorm:"not null;unique"`
-	Email          string            `json:"email" gorm:"not null;unique"`
-	CareerInterest pq.StringArray    `json:"career_interest" gorm:"type:participant_career_interest[];default:array[]::participant_career_interest[];not null"`
-	Status         ParticipantStatus `json:"status" gorm:"type:participant_status;not null"`
-	Memberships    []Membership      `json:"memberships"`
-	Photos         []Photo           `json:"photos"`
+	Name           string                     `json:"name" gorm:"not null;unique"`
+	Email          string                     `json:"email" gorm:"not null;unique"`
+	CareerInterest ParticipantCareerInterests `json:"career_interest" gorm:"not null"`
+	Status         ParticipantStatus          `json:"status" gorm:"not null"`
+	Memberships    []Membership               `json:"memberships"`
+	Photos         []Photo                    `json:"photos"`
 }
