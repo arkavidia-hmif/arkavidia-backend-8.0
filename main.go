@@ -42,6 +42,11 @@ import (
 // ASSIGNED TO: @akbarmridho
 // STATUS: IN PROGRESS
 
+// TODO: Gunakan syntax iota untuk membuat tipe enum untuk memperkecil size penyimpanan pada basis data (string menjadi integer)
+// REFERENCE: https://levelup.gitconnected.com/implementing-enums-in-golang-9537c433d6e2
+// ASSIGNED TO: @rayhankinan
+// STATUS: IN PROGRESS
+
 func main() {
 	// Configure runtime
 	runtime.GOMAXPROCS(runtime.NumCPU())
