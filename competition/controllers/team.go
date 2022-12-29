@@ -118,13 +118,6 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-		if err != nil {
-			response.Message = "ERROR: BCRYPT ERROR"
-			c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
-			return
-		}
-
 		// Validate Username
 		conditionUsername := models.Team{Username: request.Username}
 		team := models.Team{}
@@ -153,7 +146,8 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		team = models.Team{Username: request.Username, HashedPassword: hashedPassword, TeamName: request.TeamName, Status: models.WaitingForEvaluation}
+		encryptedString := models.EncryptedString(request.Password)
+		team = models.Team{Username: request.Username, HashedPassword: encryptedString, TeamName: request.TeamName, Status: models.WaitingForEvaluation}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
@@ -349,13 +343,6 @@ func ChangePasswordHandler() gin.HandlerFunc {
 					return
 				}
 
-				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-				if err != nil {
-					response.Message = "ERROR: BCRYPT ERROR"
-					c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
-					return
-				}
-
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
@@ -365,7 +352,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 				teamID := value.(uint)
 				oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
-				newTeam := models.Team{HashedPassword: hashedPassword}
+				newTeam := models.Team{HashedPassword: models.EncryptedString(request.Password)}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
