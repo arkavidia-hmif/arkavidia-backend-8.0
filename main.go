@@ -47,6 +47,11 @@ import (
 // ASSIGNED TO: @rayhankinan
 // STATUS: IN PROGRESS
 
+// TODO: Tambahkan error handling untuk sinkronisasi seluruh error [IN PROGRESS]
+// REFERENCE: https://dasarpemrogramangolang.novalagung.com/C-http-error-handling.html
+// ASSIGNED TO: @rayhankinan
+// STATUS: IN PROGRESS
+
 func main() {
 	// Configure runtime
 	runtime.GOMAXPROCS(runtime.NumCPU())
