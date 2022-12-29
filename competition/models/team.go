@@ -24,16 +24,17 @@ type Team struct {
 }
 
 type DisplayTeam struct {
-	ID           uint               `json:"id,omitempty"`
-	CreatedAt    time.Time          `json:"created_at,omitempty"`
-	UpdatedAt    time.Time          `json:"updated_at,omitempty"`
-	Username     string             `json:"username,omitempty"`
-	TeamName     string             `json:"team_name,omitempty"`
-	TeamCategory types.TeamCategory `json:"team_category,omitempty"`
-	AdminID      uint               `json:"admin_id,omitempty"`
-	Status       types.TeamStatus   `json:"status,omitempty"`
-	Memberships  []Membership       `json:"memberships,omitempty"`
-	Submissions  []Submission       `json:"submissions,omitempty"`
+	ID             uint                  `json:"id,omitempty"`
+	CreatedAt      time.Time             `json:"created_at,omitempty"`
+	UpdatedAt      time.Time             `json:"updated_at,omitempty"`
+	Username       string                `json:"username,omitempty"`
+	HashedPassword types.EncryptedString `json:"-"`
+	TeamName       string                `json:"team_name,omitempty"`
+	TeamCategory   types.TeamCategory    `json:"team_category,omitempty"`
+	AdminID        uint                  `json:"admin_id,omitempty"`
+	Status         types.TeamStatus      `json:"status,omitempty"`
+	Memberships    []Membership          `json:"memberships,omitempty"`
+	Submissions    []Submission          `json:"submissions,omitempty"`
 }
 
 func (team Team) MarshalJSON() ([]byte, error) {

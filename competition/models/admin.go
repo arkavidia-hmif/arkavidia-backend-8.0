@@ -18,12 +18,13 @@ type Admin struct {
 }
 
 type DisplayAdmin struct {
-	ID            uint      `json:"id,omitempty"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
-	UpdatedAt     time.Time `json:"updated_at,omitempty"`
-	Username      string    `json:"username,omitempty"`
-	ApprovesPhoto []Photo   `json:"photos,omitempty"`
-	ApprovesTeam  []Team    `json:"teams,omitempty"`
+	ID             uint                  `json:"id,omitempty"`
+	CreatedAt      time.Time             `json:"created_at,omitempty"`
+	UpdatedAt      time.Time             `json:"updated_at,omitempty"`
+	Username       string                `json:"username,omitempty"`
+	HashedPassword types.EncryptedString `json:"-"`
+	ApprovesPhoto  []Photo               `json:"photos,omitempty"`
+	ApprovesTeam   []Team                `json:"teams,omitempty"`
 }
 
 func (admin Admin) MarshalJSON() ([]byte, error) {
