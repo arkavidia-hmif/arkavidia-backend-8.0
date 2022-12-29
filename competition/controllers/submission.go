@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"mime/multipart"
 	"net/http"
 	"path/filepath"
 
@@ -14,33 +13,11 @@ import (
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
+	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
-
-type GetSubmissionQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
-}
-
-type GetAllSubmissionsQuery struct {
-	Page int `form:"page" field:"page" binding:"required,gt=0"`
-	Size int `form:"size" field:"size" binding:"required,gt=0"`
-}
-
-type DownloadSubmissionQuery struct {
-	SubmissionID uint `form:"submission_id" field:"submission_id" binding:"required,gt=0"`
-}
-
-type AddSubmissionRequest struct {
-	Stage models.SubmissionStage `form:"stage" field:"stage" binding:"required,oneof=first-stage second-stage final-stage"`
-	File  *multipart.FileHeader  `form:"file" field:"file" binding:"required"`
-}
-
-type DeleteSubmissionRequest struct {
-	FileName      string `json:"file_name" binding:"required,uuid"`
-	FileExtension string `json:"file_extension" binding:"required,alpha"`
-}
 
 func GetSubmissionHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -60,7 +37,7 @@ func GetSubmissionHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetSubmissionQuery{}
+				query := repository.GetSubmissionQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -133,7 +110,7 @@ func GetAllSubmissionsHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetAllSubmissionsQuery{}
+				query := repository.GetAllSubmissionsQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -184,7 +161,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := DownloadSubmissionQuery{}
+				query := repository.DownloadSubmissionQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -228,7 +205,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 			}
 		case middlewares.Team:
 			{
-				query := DownloadSubmissionQuery{}
+				query := repository.DownloadSubmissionQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -306,7 +283,7 @@ func AddSubmissionHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := AddSubmissionRequest{}
+				request := repository.AddSubmissionRequest{}
 				if err := c.ShouldBindWith(&request, binding.FormMultipart); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -378,7 +355,7 @@ func DeleteSubmissionHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := DeleteSubmissionRequest{}
+				request := repository.DeleteSubmissionRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))

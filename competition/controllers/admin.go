@@ -11,14 +11,10 @@ import (
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
+	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
-
-type SignInAdminRequest struct {
-	Username string `json:"username" binding:"required,alphanum"`
-	Password string `json:"password" binding:"required,ascii"`
-}
 
 func SignInAdminHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -26,7 +22,7 @@ func SignInAdminHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 		response := sanitizer.Response[string]{}
 
-		request := SignInAdminRequest{}
+		request := repository.SignInAdminRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
 			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))

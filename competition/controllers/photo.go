@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"mime/multipart"
 	"net/http"
 	"path/filepath"
 
@@ -14,48 +13,12 @@ import (
 	storageConfig "arkavidia-backend-8.0/competition/config/storage"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
+	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	storageService "arkavidia-backend-8.0/competition/services/storage"
+	"arkavidia-backend-8.0/competition/types"
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
-
-type GetPhotoQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-}
-
-type GetAllPhotosQuery struct {
-	Page int `form:"page" field:"page" binding:"required,gt=0"`
-	Size int `form:"size" field:"size" binding:"required,gt=0"`
-}
-
-type AdminDownloadPhotoQuery struct {
-	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
-}
-
-type TeamDownloadPhotoQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-	PhotoID       uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
-}
-
-type AddPhotoRequest struct {
-	ParticipantID uint                  `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-	Type          models.PhotoType      `form:"type" field:"type" binding:"required,oneof=pribadi kartu-pelajar bukti-mahasiswa-aktif bukti-pembayaran"`
-	File          *multipart.FileHeader `form:"file" field:"file" binding:"required"`
-}
-
-type ChangeStatusPhotoQuery struct {
-	PhotoID uint `form:"photo_id" field:"photo_id" binding:"required,gt=0"`
-}
-
-type ChangeStatusPhotoRequest struct {
-	Status models.PhotoStatus `json:"status" binding:"required,oneof=waiting-for-approval approved denied"`
-}
-
-type DeletePhotoRequest struct {
-	ParticipantID uint   `json:"participant_id" binding:"required,gt=0"`
-	FileName      string `json:"file_name" binding:"required,uuid"`
-	FileExtension string `json:"file_extension" binding:"required,alpha"`
-}
 
 func GetPhotoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -75,7 +38,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetPhotoQuery{}
+				query := repository.GetPhotoQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -98,7 +61,7 @@ func GetPhotoHandler() gin.HandlerFunc {
 			}
 		case middlewares.Team:
 			{
-				query := GetPhotoQuery{}
+				query := repository.GetPhotoQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -162,7 +125,7 @@ func GetAllPhotosHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetAllPhotosQuery{}
+				query := repository.GetAllPhotosQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -212,7 +175,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := AdminDownloadPhotoQuery{}
+				query := repository.AdminDownloadPhotoQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -256,7 +219,7 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 			}
 		case middlewares.Team:
 			{
-				query := TeamDownloadPhotoQuery{}
+				query := repository.TeamDownloadPhotoQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -342,7 +305,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := AddPhotoRequest{}
+				request := repository.AddPhotoRequest{}
 				if err := c.ShouldBindWith(&request, binding.FormMultipart); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -376,7 +339,7 @@ func AddPhotoHandler() gin.HandlerFunc {
 				fileUUID := uuid.New()
 				fileExt := filepath.Ext(request.File.Filename)
 
-				photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: models.WaitingForApproval, Type: request.Type}
+				photo := models.Photo{FileName: fileUUID, FileExtension: fileExt, ParticipantID: request.ParticipantID, Status: types.WaitingForApproval, Type: request.Type}
 				if err := db.Create(&photo).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -422,14 +385,14 @@ func ChangeStatusPhotoHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				request := ChangeStatusPhotoRequest{}
+				request := repository.ChangeStatusPhotoRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				query := ChangeStatusPhotoQuery{}
+				query := repository.ChangeStatusPhotoQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -483,7 +446,7 @@ func DeletePhotoHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := DeletePhotoRequest{}
+				request := repository.DeletePhotoRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))

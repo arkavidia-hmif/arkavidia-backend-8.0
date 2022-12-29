@@ -8,53 +8,11 @@ import (
 
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
+	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
+	"arkavidia-backend-8.0/competition/types"
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
-
-type GetMemberQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
-}
-
-type GetAllMembersQuery struct {
-	Page int `form:"page" field:"page" binding:"required,gt=0"`
-	Size int `form:"size" field:"size" binding:"required,gt=0"`
-}
-
-type AddMemberRequest struct {
-	Name            string                            `json:"name" binding:"required,ascii"`
-	Email           string                            `json:"email" binding:"required,email"`
-	CareerInterests models.ParticipantCareerInterests `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
-	Role            models.MembershipRole             `json:"role" binding:"required,oneof=leader member"`
-}
-
-type ChangeCareerInterestQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-}
-
-type ChangeCareerInterestRequest struct {
-	CareerInterests models.ParticipantCareerInterests `json:"career_interest" binding:"required,dive,oneof=software-engineering product-management ui-designer ux-designer ux-researcher it-consultant game-developer cyber-security business-analyst business-intelligence data-scientist data-analyst"`
-}
-
-type ChangeRoleQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-}
-
-type ChangeRoleRequest struct {
-	Role models.MembershipRole `json:"role" binding:"required,oneof=leader member"`
-}
-
-type ChangeStatusParticipantQuery struct {
-	ParticipantID uint `form:"participant_id" field:"participant_id" binding:"required,gt=0"`
-}
-
-type ChangeStatusParticipantRequest struct {
-	Status models.ParticipantStatus `json:"status" binding:"required,oneof=waiting-for-verification verified declined"`
-}
-
-type DeleteMemberRequest struct {
-	ParticipantID uint `json:"participant_id" binding:"required,gt=0"`
-}
 
 func GetMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -73,7 +31,7 @@ func GetMemberHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetMemberQuery{}
+				query := repository.GetMemberQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -179,7 +137,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetAllMembersQuery{}
+				query := repository.GetAllMembersQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -228,7 +186,7 @@ func AddMemberHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := AddMemberRequest{}
+				request := repository.AddMemberRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -246,7 +204,7 @@ func AddMemberHandler() gin.HandlerFunc {
 				participant := models.Participant{}
 				membership := models.Membership{}
 				if err := db.Transaction(func(tx *gorm.DB) error {
-					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterests, Status: models.WaitingForVerification}
+					condition := models.Participant{Name: request.Name, Email: request.Email, CareerInterest: request.CareerInterests, Status: types.WaitingForVerification}
 					if err := tx.FirstOrCreate(&participant, &condition).Error; err != nil {
 						return err
 					}
@@ -298,14 +256,14 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := ChangeCareerInterestRequest{}
+				request := repository.ChangeCareerInterestRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				query := ChangeCareerInterestQuery{}
+				query := repository.ChangeCareerInterestQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -367,14 +325,14 @@ func ChangeRoleHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := ChangeRoleRequest{}
+				request := repository.ChangeRoleRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				query := ChangeRoleQuery{}
+				query := repository.ChangeRoleQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -428,14 +386,14 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := ChangeStatusParticipantRequest{}
+				request := repository.ChangeStatusParticipantRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				query := ChangeStatusParticipantQuery{}
+				query := repository.ChangeStatusParticipantQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -481,7 +439,7 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := DeleteMemberRequest{}
+				request := repository.DeleteMemberRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))

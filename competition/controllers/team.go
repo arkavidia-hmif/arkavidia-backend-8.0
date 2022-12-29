@@ -12,48 +12,12 @@ import (
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/models"
+	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
+	"arkavidia-backend-8.0/competition/types"
 	"arkavidia-backend-8.0/competition/utils/mail"
 	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
-
-type SignInTeamRequest struct {
-	Username string `json:"username" binding:"required,alphanum"`
-	Password string `json:"password" binding:"required,ascii"`
-}
-
-type SignUpTeamRequest struct {
-	Username string             `json:"username" binding:"required,alphanum"`
-	Password string             `json:"password" binding:"required,ascii"`
-	TeamName string             `json:"team_name" binding:"required,ascii"`
-	Members  []SignUpMembership `json:"member_list" binding:"required,dive"`
-}
-
-type GetTeamQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
-}
-
-type GetAllTeamsQuery struct {
-	Page         int                 `form:"page" field:"page" binding:"required,gt=0"`
-	Size         int                 `form:"size" field:"size" binding:"required,gt=0"`
-	TeamCategory models.TeamCategory `form:"team_category" field:"team_category" binding:"required,oneof=competitive-programming datavidia uxvidia arkalogica"`
-}
-
-type ChangePasswordRequest struct {
-	Password string `json:"password" binding:"required,ascii"`
-}
-
-type CompetitionRegistrationQuery struct {
-	TeamCategory models.TeamCategory `form:"competition" field:"competition" binding:"required,oneof=competitive-programming datavidia uxvidia arkalogica"`
-}
-
-type ChangeStatusTeamQuery struct {
-	TeamID uint `form:"team_id" field:"team_id" binding:"required,gt=0"`
-}
-
-type ChangeStatusTeamRequest struct {
-	Status models.TeamStatus `json:"status" binding:"required,oneof=waiting-for-evaluation passed eliminated"`
-}
 
 func SignInTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -61,7 +25,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 		response := sanitizer.Response[string]{}
 
-		request := SignInTeamRequest{}
+		request := repository.SignInTeamRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
 			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -111,7 +75,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		config := authConfig.Config.GetMetadata()
 		response := sanitizer.Response[string]{}
 
-		request := SignUpTeamRequest{}
+		request := repository.SignUpTeamRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
 			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -146,15 +110,15 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return
 		}
 
-		encryptedString := models.EncryptedString(request.Password)
-		team = models.Team{Username: request.Username, HashedPassword: encryptedString, TeamName: request.TeamName, Status: models.WaitingForEvaluation}
+		encryptedString := []byte(request.Password)
+		team = models.Team{Username: request.Username, HashedPassword: encryptedString, TeamName: request.TeamName, Status: types.WaitingForEvaluation}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&team).Error; err != nil {
 				return err
 			}
 
 			for _, member := range request.Members {
-				conditionParticipant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterests, Status: models.WaitingForVerification}
+				conditionParticipant := models.Participant{Name: member.Name, Email: member.Email, CareerInterest: member.CareerInterests, Status: types.WaitingForVerification}
 				participant := models.Participant{}
 				if err := tx.FirstOrCreate(&participant, &conditionParticipant).Error; err != nil {
 					return err
@@ -217,7 +181,7 @@ func GetTeamHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetTeamQuery{}
+				query := repository.GetTeamQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -287,7 +251,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				query := GetAllTeamsQuery{}
+				query := repository.GetAllTeamsQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -336,7 +300,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				request := ChangePasswordRequest{}
+				request := repository.ChangePasswordRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -352,7 +316,7 @@ func ChangePasswordHandler() gin.HandlerFunc {
 
 				teamID := value.(uint)
 				oldTeam := models.Team{Model: gorm.Model{ID: teamID}}
-				newTeam := models.Team{HashedPassword: models.EncryptedString(request.Password)}
+				newTeam := models.Team{HashedPassword: []byte(request.Password)}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -390,7 +354,7 @@ func CompetitionRegistration() gin.HandlerFunc {
 		switch role {
 		case middlewares.Team:
 			{
-				query := CompetitionRegistrationQuery{}
+				query := repository.CompetitionRegistrationQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
@@ -444,14 +408,14 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 		switch role {
 		case middlewares.Admin:
 			{
-				request := ChangeStatusTeamRequest{}
+				request := repository.ChangeStatusTeamRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
 					return
 				}
 
-				query := ChangeStatusTeamQuery{}
+				query := repository.ChangeStatusTeamQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
 					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
