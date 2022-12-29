@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql/driver"
+	"regexp"
 )
 
 type ParticipantCareerInterest string
@@ -36,9 +37,16 @@ func (ParticipantCareerInterest) GormDataType() string {
 
 type ParticipantCareerInterests []ParticipantCareerInterest
 
-func (participantCareerInterests *ParticipantCareerInterests) Scan(values []interface{}) error {
-	for _, value := range values {
-		*participantCareerInterests = append(*participantCareerInterests, ParticipantCareerInterest(value.(string)))
+func (participantCareerInterests *ParticipantCareerInterests) Scan(values interface{}) error {
+	regex, err := regexp.Compile(`[a-zA-Z\-]+`)
+	if err != nil {
+		return nil
+	}
+
+	words := regex.FindAllString(values.(string), -1)
+	*participantCareerInterests = []ParticipantCareerInterest{}
+	for _, word := range words {
+		*participantCareerInterests = append(*participantCareerInterests, ParticipantCareerInterest(word))
 	}
 	return nil
 }

@@ -16,19 +16,18 @@ import (
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	"arkavidia-backend-8.0/competition/types"
 	"arkavidia-backend-8.0/competition/utils/mail"
-	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 func SignInTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := authConfig.Config.GetMetadata()
-		response := sanitizer.Response[string]{}
+		response := repository.Response[string]{}
 
 		request := repository.SignInTeamRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -36,13 +35,13 @@ func SignInTeamHandler() gin.HandlerFunc {
 		team := models.Team{}
 		if err := db.Where(&condition).Find(&team).Error; err != nil {
 			response.Message = "ERROR: INVALID USERNAME OR PASSWORD"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(team.HashedPassword, []byte(request.Password)); err != nil {
 			response.Message = "ERROR: INVALID USERNAME OR PASSWORD"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -59,13 +58,13 @@ func SignInTeamHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response.Message = "ERROR: JWT SIGNING ERROR"
-			c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		response.Message = "SUCCESS"
 		response.Data = signedAuthToken
-		c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
+		c.JSON(http.StatusCreated, response)
 	}
 }
 
@@ -73,12 +72,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := authConfig.Config.GetMetadata()
-		response := sanitizer.Response[string]{}
+		response := repository.Response[string]{}
 
 		request := repository.SignUpTeamRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -87,12 +86,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		team := models.Team{}
 		if err := db.Where(&conditionUsername).Find(&team).Error; err != nil {
 			response.Message = "ERROR: BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 		if team.Username != "" {
 			response.Message = "ERROR: USERNAME EXISTED"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -101,12 +100,12 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		team = models.Team{}
 		if err := db.Where(&conditionTeamName).Find(&team).Error; err != nil {
 			response.Message = "ERROR: BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 		if team.TeamName != "" {
 			response.Message = "ERROR: TEAMNAME EXISTED"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -124,7 +123,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 					return err
 				}
 
-				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role, Team: team, Participant: participant}
+				membership := models.Membership{TeamID: team.ID, ParticipantID: participant.ID, Role: member.Role}
 				if err := tx.Create(&membership).Error; err != nil {
 					return err
 				}
@@ -132,7 +131,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 			return nil
 		}); err != nil {
 			response.Message = "BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -149,7 +148,7 @@ func SignUpTeamHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response.Message = "ERROR: JWT SIGNING ERROR"
-			c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
@@ -160,19 +159,19 @@ func SignUpTeamHandler() gin.HandlerFunc {
 
 		response.Message = "SUCCESS"
 		response.Data = signedAuthToken
-		c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
+		c.JSON(http.StatusCreated, response)
 	}
 }
 
 func GetTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Team]{}
+		response := repository.Response[models.Team]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -184,7 +183,7 @@ func GetTeamHandler() gin.HandlerFunc {
 				query := repository.GetTeamQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -192,13 +191,13 @@ func GetTeamHandler() gin.HandlerFunc {
 				team := models.Team{}
 				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = team
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		case middlewares.Team:
@@ -206,7 +205,7 @@ func GetTeamHandler() gin.HandlerFunc {
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -215,19 +214,19 @@ func GetTeamHandler() gin.HandlerFunc {
 				team := models.Team{}
 				if err := db.Preload("Memberships").Where(&condition).Find(&team).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = team
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -237,12 +236,12 @@ func GetTeamHandler() gin.HandlerFunc {
 func GetAllTeamsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[[]models.Team]{}
+		response := repository.Response[[]models.Team]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -254,7 +253,7 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 				query := repository.GetAllTeamsQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -264,19 +263,19 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 				teams := []models.Team{}
 				if err := db.Where(&condition).Offset(offset).Limit(limit).Find(&teams).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = teams
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -286,12 +285,12 @@ func GetAllTeamsHandler() gin.HandlerFunc {
 func ChangePasswordHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Team]{}
+		response := repository.Response[models.Team]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -303,14 +302,14 @@ func ChangePasswordHandler() gin.HandlerFunc {
 				request := repository.ChangePasswordRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -319,18 +318,18 @@ func ChangePasswordHandler() gin.HandlerFunc {
 				newTeam := models.Team{HashedPassword: []byte(request.Password)}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -340,12 +339,12 @@ func ChangePasswordHandler() gin.HandlerFunc {
 func CompetitionRegistration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Team]{}
+		response := repository.Response[models.Team]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -357,14 +356,14 @@ func CompetitionRegistration() gin.HandlerFunc {
 				query := repository.CompetitionRegistrationQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -373,18 +372,18 @@ func CompetitionRegistration() gin.HandlerFunc {
 				newTeam := models.Team{TeamCategory: query.TeamCategory}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -394,12 +393,12 @@ func CompetitionRegistration() gin.HandlerFunc {
 func ChangeStatusTeamHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Team]{}
+		response := repository.Response[models.Team]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -411,21 +410,21 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 				request := repository.ChangeStatusTeamRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := repository.ChangeStatusTeamQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -434,18 +433,18 @@ func ChangeStatusTeamHandler() gin.HandlerFunc {
 				newTeam := models.Team{Status: request.Status, AdminID: adminID}
 				if err := db.Where(&oldTeam).Updates(&newTeam).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}

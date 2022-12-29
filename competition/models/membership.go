@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -10,11 +12,31 @@ import (
 
 type Membership struct {
 	gorm.Model
-	TeamID        uint                 `json:"team_id" gorm:"uniqueIndex:membership_index"`
-	ParticipantID uint                 `json:"participant_id" gorm:"uniqueIndex:membership_index"`
-	Role          types.MembershipRole `json:"role" gorm:"not null"`
-	Team          Team                 `json:"team" gorm:"foreignKey:TeamID;references:ID"`
-	Participant   Participant          `json:"participant" gorm:"foreignKey:ParticipantID;references:ID"`
+	TeamID        uint                 `gorm:"uniqueIndex:membership_index"`
+	ParticipantID uint                 `gorm:"uniqueIndex:membership_index"`
+	Role          types.MembershipRole `gorm:"not null"`
+	Team          Team                 `gorm:"foreignKey:TeamID;references:ID"`
+	Participant   Participant          `gorm:"foreignKey:ParticipantID;references:ID"`
+}
+
+type DisplayMembership struct {
+	ID            uint                 `json:"id,omitempty"`
+	CreatedAt     time.Time            `json:"created_at,omitempty"`
+	UpdatedAt     time.Time            `json:"updated_at,omitempty"`
+	TeamID        uint                 `json:"team_id,omitempty"`
+	ParticipantID uint                 `json:"participant_id,omitempty"`
+	Role          types.MembershipRole `json:"role,omitempty"`
+}
+
+func (membership Membership) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&DisplayMembership{
+		ID:            membership.ID,
+		CreatedAt:     membership.CreatedAt,
+		UpdatedAt:     membership.UpdatedAt,
+		TeamID:        membership.TeamID,
+		ParticipantID: membership.ParticipantID,
+		Role:          membership.Role,
+	})
 }
 
 // Menambahkan constraint untuk mengecek apakah terdapat participant yang mengikuti dua team atau lebih

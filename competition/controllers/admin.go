@@ -13,19 +13,18 @@ import (
 	"arkavidia-backend-8.0/competition/models"
 	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
-	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 func SignInAdminHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
 		config := authConfig.Config.GetMetadata()
-		response := sanitizer.Response[string]{}
+		response := repository.Response[string]{}
 
 		request := repository.SignInAdminRequest{}
 		if err := c.ShouldBindJSON(&request); err != nil {
 			response.Message = "ERROR: BAD REQUEST"
-			c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
@@ -33,13 +32,13 @@ func SignInAdminHandler() gin.HandlerFunc {
 		admin := models.Admin{}
 		if err := db.Where(&condition).Find(&admin).Error; err != nil {
 			response.Message = "ERROR: INVALID USERNAME"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(admin.HashedPassword, []byte(request.Password)); err != nil {
 			response.Message = "ERROR: INVALID PASSWORD"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -56,12 +55,12 @@ func SignInAdminHandler() gin.HandlerFunc {
 		signedAuthToken, err := unsignedAuthToken.SignedString(config.JWTSignatureKey)
 		if err != nil {
 			response.Message = "ERROR: JWT SIGNING ERROR"
-			c.AbortWithStatusJSON(http.StatusInternalServerError, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 
 		response.Message = "SUCCESS"
 		response.Data = signedAuthToken
-		c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
+		c.JSON(http.StatusCreated, response)
 	}
 }

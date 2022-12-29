@@ -5,13 +5,11 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 
 	messageConfig "arkavidia-backend-8.0/competition/config/message"
 	"arkavidia-backend-8.0/competition/middlewares"
 	"arkavidia-backend-8.0/competition/routes"
 	"arkavidia-backend-8.0/competition/utils/mail"
-	"arkavidia-backend-8.0/competition/utils/validation"
 )
 
 // TODO: Gunakan gzip untuk mengkompresi size HTTP Response
@@ -37,7 +35,7 @@ import (
 // TODO: Gunakan GormValuerInterface untuk mengautomatisasi enkripsi bcrypt password
 // REFERENCE: https://gorm.io/docs/data_types.html#GormValuerInterface
 // ASSIGNED TO: @graceclaudia19
-// STATUS: IN REVIEW
+// STATUS: DONE
 
 // TODO: Tambahkan hash pada semua ID di model untuk mencegah terjadinya IDOR
 // REFERENCE: https://www.securecoding.com/blog/how-to-prevent-idor-attacks/
@@ -50,9 +48,6 @@ func main() {
 
 	// Gin Framework
 	engine := gin.Default()
-
-	// Setup Validator
-	binding.Validator = validation.Validator
 
 	// Middlewares
 	engine.Use(middlewares.CORSMiddleware())

@@ -11,18 +11,17 @@ import (
 	"arkavidia-backend-8.0/competition/repository"
 	databaseService "arkavidia-backend-8.0/competition/services/database"
 	"arkavidia-backend-8.0/competition/types"
-	"arkavidia-backend-8.0/competition/utils/sanitizer"
 )
 
 func GetMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[[]models.Participant]{}
+		response := repository.Response[[]models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -34,7 +33,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				query := repository.GetMemberQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -42,7 +41,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				memberships := []models.Membership{}
 				if err := db.Where(&condition).Find(&memberships).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -60,13 +59,13 @@ func GetMemberHandler() gin.HandlerFunc {
 					return nil
 				}); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = participants
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		case middlewares.Team:
@@ -74,7 +73,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -83,7 +82,7 @@ func GetMemberHandler() gin.HandlerFunc {
 				memberships := []models.Membership{}
 				if err := db.Where(&condition).Find(&memberships).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -101,19 +100,19 @@ func GetMemberHandler() gin.HandlerFunc {
 					return nil
 				}); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = participants
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -123,12 +122,12 @@ func GetMemberHandler() gin.HandlerFunc {
 func GetAllMembersHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[[]models.Participant]{}
+		response := repository.Response[[]models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -140,7 +139,7 @@ func GetAllMembersHandler() gin.HandlerFunc {
 				query := repository.GetAllMembersQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -150,19 +149,19 @@ func GetAllMembersHandler() gin.HandlerFunc {
 
 				if err := db.Offset(offset).Limit(limit).Find(&participants).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = participants
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -172,12 +171,12 @@ func GetAllMembersHandler() gin.HandlerFunc {
 func AddMemberHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Participant]{}
+		response := repository.Response[models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -189,14 +188,14 @@ func AddMemberHandler() gin.HandlerFunc {
 				request := repository.AddMemberRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -220,19 +219,19 @@ func AddMemberHandler() gin.HandlerFunc {
 
 				}); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
 				response.Data = participant
-				c.JSON(http.StatusCreated, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusCreated, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -242,12 +241,12 @@ func AddMemberHandler() gin.HandlerFunc {
 func ChangeCareerInterestHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Participant]{}
+		response := repository.Response[models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -259,21 +258,21 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				request := repository.ChangeCareerInterestRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := repository.ChangeCareerInterestQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -282,7 +281,7 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -290,18 +289,18 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 				newParticipant := models.Participant{CareerInterest: request.CareerInterests}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -311,12 +310,12 @@ func ChangeCareerInterestHandler() gin.HandlerFunc {
 func ChangeRoleHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Participant]{}
+		response := repository.Response[models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -328,21 +327,21 @@ func ChangeRoleHandler() gin.HandlerFunc {
 				request := repository.ChangeRoleRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := repository.ChangeRoleQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -351,18 +350,18 @@ func ChangeRoleHandler() gin.HandlerFunc {
 				newMembership := models.Membership{Role: request.Role}
 				if err := db.Where(&oldMembership).Updates(&newMembership).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -372,12 +371,12 @@ func ChangeRoleHandler() gin.HandlerFunc {
 func ChangeStatusParticipantHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Participant]{}
+		response := repository.Response[models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -389,14 +388,14 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 				request := repository.ChangeStatusParticipantRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				query := repository.ChangeStatusParticipantQuery{}
 				if err := c.ShouldBindQuery(&query); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
@@ -404,18 +403,18 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 				newParticipant := models.Participant{Status: request.Status}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
@@ -425,12 +424,12 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 func DeleteParticipantHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		db := databaseService.DB.GetConnection()
-		response := sanitizer.Response[models.Participant]{}
+		response := repository.Response[models.Participant]{}
 
 		value, exists := c.Get("role")
 		if !exists {
 			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -442,14 +441,14 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 				request := repository.DeleteMemberRequest{}
 				if err := c.ShouldBindJSON(&request); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				value, exists := c.Get("id")
 				if !exists {
 					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 					return
 				}
 
@@ -458,24 +457,24 @@ func DeleteParticipantHandler() gin.HandlerFunc {
 				membership := models.Membership{}
 				if err := db.Where(&condition).Find(&membership).Error; err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				if err := db.Delete(&membership); err != nil {
 					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, sanitizer.SanitizeStruct(response))
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
 				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, sanitizer.SanitizeStruct(response))
+				c.JSON(http.StatusOK, response)
 				return
 			}
 		default:
 			{
 				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, sanitizer.SanitizeStruct(response))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
 		}
