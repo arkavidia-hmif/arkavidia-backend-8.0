@@ -37,7 +37,7 @@ import (
 // TODO: Gunakan GormValuerInterface untuk mengautomatisasi enkripsi bcrypt password
 // REFERENCE: https://gorm.io/docs/data_types.html#GormValuerInterface
 // ASSIGNED TO: @graceclaudia19
-// STATUS: IN PROGRESS
+// STATUS: IN REVIEW
 
 // TODO: Tambahkan hash pada semua ID di model untuk mencegah terjadinya IDOR
 // REFERENCE: https://www.securecoding.com/blog/how-to-prevent-idor-attacks/
