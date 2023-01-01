@@ -14,6 +14,7 @@ func PhotoRoute(route *gin.Engine) {
 	photoGroup.GET("/", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetPhotoHandler()))
 	photoGroup.GET("/all", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetAllPhotosHandler()))
 	photoGroup.GET("/download", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.DownloadPhotoHandler()))
+	photoGroup.GET("/render", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.RenderPhotoHandler()))
 	photoGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddPhotoHandler())
 	photoGroup.PUT("/status", middlewares.AuthMiddleware(), controllers.ChangeStatusPhotoHandler())
 	photoGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeletePhotoHandler())
