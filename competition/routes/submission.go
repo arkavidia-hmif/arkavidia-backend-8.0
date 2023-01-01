@@ -14,6 +14,7 @@ func SubmissionRoute(route *gin.Engine) {
 	submissionGroup.GET("/", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetSubmissionHandler()))
 	submissionGroup.GET("/all", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetAllSubmissionsHandler()))
 	submissionGroup.GET("/download", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.DownloadSubmissionHandler()))
+	submissionGroup.GET("/render", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.RenderSubmissionHandler()))
 	submissionGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
 	submissionGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
 }
