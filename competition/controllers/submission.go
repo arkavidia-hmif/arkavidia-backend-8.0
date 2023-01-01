@@ -300,8 +300,7 @@ func RenderSubmissionHandler() gin.HandlerFunc {
 					return
 				}
 
-				url := "https://storage.googleapis.com/arkavidia-8/competition/submission/23f672bb-7b67-4759-bc6b-17783494b208.pdf"
-				// url := fmt.Sprintf("%s/%s/%s/%s%s", config.StorageHost, config.BucketName, config.SubmissionDir, submission.FileName, submission.FileExtension)
+				url := fmt.Sprintf("%s/%s/%s/%s%s", config.StorageHost, config.BucketName, config.SubmissionDir, submission.FileName, submission.FileExtension)
 				res, err := http.Get(url)
 				if err != nil {
 					response.Message = err.Error()
