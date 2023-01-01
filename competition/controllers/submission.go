@@ -178,7 +178,130 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 					return
 				}
 
-				url := fmt.Sprintf("%s/%s/%s/%s%s", config.StorageHost, config.BucketName, config.SubmissionDir, submission.FileName, submission.FileExtension)
+				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
+				if err != nil {
+					response.Message = "ERROR: CONTENT NOT FOUND IN STORAGE"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				var content []byte
+				length, err := IOWriter.Write(content)
+				if err != nil {
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				c.Header("Content-Description", "File Transfer")
+				c.Header("Content-Transfer-Encoding", "binary")
+				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+				c.Header("Content-Type", "application/octet-stream")
+				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Writer.Write(content)
+
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		case middlewares.Team:
+			{
+				query := repository.DownloadSubmissionQuery{}
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				value, exists := c.Get("id")
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+					return
+				}
+
+				teamID := value.(uint)
+				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}, TeamID: teamID}
+				submission := models.Submission{}
+				if err := db.Where(&condition).Find(&submission).Error; err != nil {
+					response.Message = "ERROR: CONTENT NOT FOUND IN DB"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
+				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
+				if err != nil {
+					response.Message = "ERROR: CONTENT NOT FOUND IN STORAGE"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				var content []byte
+				length, err := IOWriter.Write(content)
+				if err != nil {
+					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				c.Header("Content-Description", "File Transfer")
+				c.Header("Content-Transfer-Encoding", "binary")
+				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+				c.Header("Content-Type", "application/octet-stream")
+				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Writer.Write(content)
+
+				response.Message = "SUCCESS"
+				c.JSON(http.StatusOK, response)
+				return
+			}
+		default:
+			{
+				response.Message = "ERROR: INVALID ROLE"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				return
+			}
+		}
+	}
+}
+
+func RenderSubmissionHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db := databaseService.DB.GetConnection()
+		config := storageConfig.Config.GetMetadata()
+		response := repository.Response[models.Submission]{}
+
+		value, exists := c.Get("role")
+		if !exists {
+			response.Message = "UNAUTHORIZED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		role := value.(middlewares.AuthRole)
+
+		switch role {
+		case middlewares.Admin:
+			{
+				query := repository.DownloadSubmissionQuery{}
+				if err := c.ShouldBindQuery(&query); err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}}
+				submission := models.Submission{}
+				if err := db.Where(&condition).Find(&submission).Error; err != nil {
+					response.Message = "ERROR: CONTENT NOT FOUND IN DB"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
+				url := "https://storage.googleapis.com/arkavidia-8/competition/submission/23f672bb-7b67-4759-bc6b-17783494b208.pdf"
+				// url := fmt.Sprintf("%s/%s/%s/%s%s", config.StorageHost, config.BucketName, config.SubmissionDir, submission.FileName, submission.FileExtension)
 				res, err := http.Get(url)
 				if err != nil {
 					response.Message = err.Error()
@@ -261,128 +384,6 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				c.Header("Content-Disposition", "inline")
 				c.Header("Content-Type", mtype.String())
 				c.Header("Accept-Length", fmt.Sprintf("%d", res.ContentLength))
-				c.Writer.Write(content)
-
-				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, response)
-				return
-			}
-		default:
-			{
-				response.Message = "ERROR: INVALID ROLE"
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-				return
-			}
-		}
-	}
-}
-
-func RenderSubmissionHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		db := databaseService.DB.GetConnection()
-		config := storageConfig.Config.GetMetadata()
-		response := repository.Response[models.Submission]{}
-
-		value, exists := c.Get("role")
-		if !exists {
-			response.Message = "UNAUTHORIZED"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
-
-		role := value.(middlewares.AuthRole)
-
-		switch role {
-		case middlewares.Admin:
-			{
-				query := repository.DownloadSubmissionQuery{}
-				if err := c.ShouldBindQuery(&query); err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}}
-				submission := models.Submission{}
-				if err := db.Where(&condition).Find(&submission).Error; err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
-				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
-				if err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				var content []byte
-				length, err := IOWriter.Write(content)
-				if err != nil {
-					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-
-				c.Header("Content-Description", "File Transfer")
-				c.Header("Content-Transfer-Encoding", "binary")
-				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Accept-Length", fmt.Sprintf("%d", length))
-				c.Writer.Write(content)
-
-				response.Message = "SUCCESS"
-				c.JSON(http.StatusOK, response)
-				return
-			}
-		case middlewares.Team:
-			{
-				query := repository.DownloadSubmissionQuery{}
-				if err := c.ShouldBindQuery(&query); err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				value, exists := c.Get("id")
-				if !exists {
-					response.Message = "UNAUTHORIZED"
-					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-					return
-				}
-
-				teamID := value.(uint)
-				condition := models.Submission{Model: gorm.Model{ID: query.SubmissionID}, TeamID: teamID}
-				submission := models.Submission{}
-				if err := db.Where(&condition).Find(&submission).Error; err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
-				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
-				if err != nil {
-					response.Message = "ERROR: BAD REQUEST"
-					c.AbortWithStatusJSON(http.StatusBadRequest, response)
-					return
-				}
-
-				var content []byte
-				length, err := IOWriter.Write(content)
-				if err != nil {
-					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-
-				c.Header("Content-Description", "File Transfer")
-				c.Header("Content-Transfer-Encoding", "binary")
-				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Accept-Length", fmt.Sprintf("%d", length))
 				c.Writer.Write(content)
 
 				response.Message = "SUCCESS"
