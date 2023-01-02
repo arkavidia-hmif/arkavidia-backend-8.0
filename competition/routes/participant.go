@@ -5,12 +5,17 @@ import (
 
 	"arkavidia-backend-8.0/competition/controllers"
 	"arkavidia-backend-8.0/competition/middlewares"
+	"arkavidia-backend-8.0/competition/utils/cache"
 )
 
 func ParticipantRoute(route *gin.Engine) {
-	route.GET("/get-member", middlewares.AuthMiddleware(), controllers.GetMemberHandler())
-	route.POST("/add-member", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
-	route.PUT("/change-career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
-	route.PUT("/change-role", middlewares.AuthMiddleware(), controllers.ChangeRoleInterestHandler())
-	route.DELETE("/delete-member", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
+	participantGroup := route.Group("/participant")
+
+	participantGroup.GET("/", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetMemberHandler()))
+	participantGroup.GET("/all", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetAllMembersHandler()))
+	participantGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddMemberHandler())
+	participantGroup.PUT("/career-interest", middlewares.AuthMiddleware(), controllers.ChangeCareerInterestHandler())
+	participantGroup.PUT("/role", middlewares.AuthMiddleware(), controllers.ChangeRoleHandler())
+	participantGroup.PUT("/status", middlewares.AuthMiddleware(), controllers.ChangeStatusParticipantHandler())
+	participantGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeleteParticipantHandler())
 }

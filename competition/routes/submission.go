@@ -5,10 +5,16 @@ import (
 
 	"arkavidia-backend-8.0/competition/controllers"
 	"arkavidia-backend-8.0/competition/middlewares"
+	"arkavidia-backend-8.0/competition/utils/cache"
 )
 
 func SubmissionRoute(route *gin.Engine) {
-	route.GET("/get-submission", middlewares.AuthMiddleware(), controllers.GetSubmissionHandler())
-	route.POST("/add-submission", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
-	route.DELETE("/delete-submission", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
+	submissionGroup := route.Group("/submission")
+
+	submissionGroup.GET("/", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetSubmissionHandler()))
+	submissionGroup.GET("/all", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetAllSubmissionsHandler()))
+	submissionGroup.GET("/download", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.DownloadSubmissionHandler()))
+	submissionGroup.GET("/render", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.RenderSubmissionHandler()))
+	submissionGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddSubmissionHandler())
+	submissionGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeleteSubmissionHandler())
 }

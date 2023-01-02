@@ -1,43 +1,46 @@
 package models
 
 import (
-	"database/sql/driver"
+	"encoding/json"
+	"time"
 
-	"github.com/lib/pq"
 	"gorm.io/gorm"
+
+	"arkavidia-backend-8.0/competition/types"
 )
-
-type ParticipantCareerInterest string
-
-const (
-	SoftwareEngineering  ParticipantCareerInterest = "software-engineering"
-	ProductManagement    ParticipantCareerInterest = "product-management"
-	UIDesigner           ParticipantCareerInterest = "ui-designer"
-	UXDesigner           ParticipantCareerInterest = "ux-designer"
-	UXResearcher         ParticipantCareerInterest = "ux-researcher"
-	ITConsultant         ParticipantCareerInterest = "it-consultant"
-	GameDeveloper        ParticipantCareerInterest = "game-developer"
-	CyberSecurity        ParticipantCareerInterest = "cyber-security"
-	BusinessAnalyst      ParticipantCareerInterest = "business-analyst"
-	BusinessIntelligence ParticipantCareerInterest = "business-intelligence"
-	DataScientist        ParticipantCareerInterest = "data-scientist"
-	DataAnalyst          ParticipantCareerInterest = "data-analyst"
-)
-
-func (participantCareerInterest *ParticipantCareerInterest) Scan(value interface{}) error {
-	*participantCareerInterest = ParticipantCareerInterest(value.(string))
-	return nil
-}
-
-func (participantCareerInterest ParticipantCareerInterest) Value() (driver.Value, error) {
-	return string(participantCareerInterest), nil
-}
 
 type Participant struct {
 	gorm.Model
-	Name           string         `json:"name" gorm:"not null;unique"`
-	Email          string         `json:"email" gorm:"not null;unique"`
-	CareerInterest pq.StringArray `json:"career_interest" gorm:"type:participant_career_interest[];default:array[]::participant_career_interest[];not null"`
-	Memberships    []Membership   `json:"memberships"`
-	Photos         []Photo        `json:"photos"`
+	Name           string                           `gorm:"not null;unique"`
+	Email          string                           `gorm:"not null;unique"`
+	CareerInterest types.ParticipantCareerInterests `gorm:"not null"`
+	Status         types.ParticipantStatus          `gorm:"not null"`
+	Memberships    []Membership
+	Photos         []Photo
+}
+
+type DisplayParticipant struct {
+	ID             uint                             `json:"id,omitempty"`
+	CreatedAt      time.Time                        `json:"created_at,omitempty"`
+	UpdatedAt      time.Time                        `json:"updated_at,omitempty"`
+	Name           string                           `json:"name,omitempty"`
+	Email          string                           `json:"email,omitempty"`
+	CareerInterest types.ParticipantCareerInterests `json:"career_interest,omitempty"`
+	Status         types.ParticipantStatus          `json:"status,omitempty"`
+	Memberships    []Membership                     `json:"memberships,omitempty"`
+	Photos         []Photo                          `json:"photos,omitempty"`
+}
+
+func (participant Participant) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&DisplayParticipant{
+		ID:             participant.ID,
+		CreatedAt:      participant.CreatedAt,
+		UpdatedAt:      participant.UpdatedAt,
+		Name:           participant.Name,
+		Email:          participant.Email,
+		CareerInterest: participant.CareerInterest,
+		Status:         participant.Status,
+		Memberships:    participant.Memberships,
+		Photos:         participant.Photos,
+	})
 }

@@ -5,10 +5,17 @@ import (
 
 	"arkavidia-backend-8.0/competition/controllers"
 	"arkavidia-backend-8.0/competition/middlewares"
+	"arkavidia-backend-8.0/competition/utils/cache"
 )
 
 func PhotoRoute(route *gin.Engine) {
-	route.GET("/get-photo", middlewares.AuthMiddleware(), controllers.GetPhotoHandler())
-	route.POST("/add-photo", middlewares.AuthMiddleware(), controllers.AddPhotoHandler())
-	route.DELETE("/delete-photo", middlewares.AuthMiddleware(), controllers.DeletePhotoHandler())
+	photoGroup := route.Group("/photo")
+
+	photoGroup.GET("/", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetPhotoHandler()))
+	photoGroup.GET("/all", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.GetAllPhotosHandler()))
+	photoGroup.GET("/download", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.DownloadPhotoHandler()))
+	photoGroup.GET("/render", middlewares.AuthMiddleware(), cache.Store.GetHandlerFunc(controllers.RenderPhotoHandler()))
+	photoGroup.POST("/", middlewares.AuthMiddleware(), controllers.AddPhotoHandler())
+	photoGroup.PUT("/status", middlewares.AuthMiddleware(), controllers.ChangeStatusPhotoHandler())
+	photoGroup.DELETE("/", middlewares.AuthMiddleware(), controllers.DeletePhotoHandler())
 }

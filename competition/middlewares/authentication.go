@@ -9,22 +9,31 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 
 	authConfig "arkavidia-backend-8.0/competition/config/authentication"
+	"arkavidia-backend-8.0/competition/repository"
+)
+
+type AuthRole string
+
+const (
+	Admin AuthRole = "Admin"
+	Team  AuthRole = "Team"
 )
 
 type AuthClaims struct {
 	jwt.RegisteredClaims
-	TeamID uint `json:"team_id"`
+	ID   uint     `json:"id"`
+	Role AuthRole `json:"role"`
 }
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		config := authConfig.GetAuthConfig()
+		config := authConfig.Config.GetMetadata()
+		response := repository.Response[string]{}
 
 		authHeader := c.GetHeader("Authorization")
 		if !strings.Contains(authHeader, "Bearer") {
-			response := gin.H{"Message": "ERROR: NO TOKEN PROVIDED"}
-			c.JSON(http.StatusUnauthorized, response)
-			c.Abort()
+			response.Message = "ERROR: NO TOKEN PROVIDED"
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
@@ -37,19 +46,18 @@ func AuthMiddleware() gin.HandlerFunc {
 			return config.JWTSignatureKey, nil
 		})
 		if err != nil {
-			response := gin.H{"Message": err.Error()}
-			c.JSON(http.StatusBadRequest, response)
-			c.Abort()
+			response.Message = "ERROR: TOKEN CANNOT BE PARSED"
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
 		if !authToken.Valid {
-			response := gin.H{"Message": "CLAIMS INVALID"}
-			c.JSON(http.StatusBadRequest, response)
-			c.Abort()
+			response.Message = "ERROR: CLAIMS INVALID"
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 
-		c.Set("team_id", authClaim.TeamID)
+		c.Set("id", authClaim.ID)
+		c.Set("role", authClaim.Role)
 		c.Next()
 	}
 }
