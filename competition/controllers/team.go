@@ -34,7 +34,7 @@ func SignInTeamHandler() gin.HandlerFunc {
 		condition := models.Team{Username: request.Username}
 		team := models.Team{}
 		if err := db.Where(&condition).Find(&team).Error; err != nil {
-			response.Message = "ERROR: INVALID USERNAME OR PASSWORD"
+			response.Message = "ERROR: USERNAME NOT FOUND"
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
