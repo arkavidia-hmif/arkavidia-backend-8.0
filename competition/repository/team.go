@@ -5,12 +5,12 @@ import (
 )
 
 type SignInTeamRequest struct {
-	Username string `json:"username" binding:"required,alphanum"`
+	Username string `json:"username" binding:"required,ascii"`
 	Password string `json:"password" binding:"required,ascii"`
 }
 
 type SignUpTeamRequest struct {
-	Username string             `json:"username" binding:"required,alphanum"`
+	Username string             `json:"username" binding:"required,ascii"`
 	Password string             `json:"password" binding:"required,ascii"`
 	TeamName string             `json:"team_name" binding:"required,ascii"`
 	Members  []SignUpMembership `json:"member_list" binding:"required,dive"`
