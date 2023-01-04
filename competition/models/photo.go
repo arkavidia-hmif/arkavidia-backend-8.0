@@ -31,6 +31,7 @@ type DisplayPhoto struct {
 	FileExtension string            `json:"file_extension,omitempty" `
 	ParticipantID uint              `json:"participant_id,omitempty"`
 	AdminID       uint              `json:"admin_id,omitempty"`
+	Type          types.PhotoType   `json:"type,omitempty"`
 	Status        types.PhotoStatus `json:"status,omitempty"`
 }
 
@@ -43,6 +44,7 @@ func (photo Photo) MarshalJSON() ([]byte, error) {
 		FileExtension: photo.FileExtension,
 		ParticipantID: photo.ParticipantID,
 		AdminID:       photo.AdminID,
+		Type:          photo.Type,
 		Status:        photo.Status,
 	})
 }
