@@ -13,7 +13,7 @@ import (
 
 type Photo struct {
 	gorm.Model
-	FileName      uuid.UUID         `gorm:"type:uuid;unique"`
+	FileName      uuid.UUID         `gorm:"type:uuid"`
 	FileExtension string            `gorm:"not null"`
 	ParticipantID uint              `gorm:"not null"`
 	AdminID       uint              `gorm:"default:null"`
