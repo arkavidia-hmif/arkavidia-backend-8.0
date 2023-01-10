@@ -178,18 +178,19 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 					return
 				}
 
-				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
-				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
+				filename := fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension)
+				IOReader, cancel, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
+				defer cancel()
+
 				if err != nil {
-					response.Message = "ERROR: CONTENT NOT FOUND IN STORAGE"
+					response.Message = "ERROR: CANNOT DOWNLOAD FILE"
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
-				var content []byte
-				length, err := IOWriter.Write(content)
+				content, err := ioutil.ReadAll(IOReader)
 				if err != nil {
-					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					response.Message = err.Error()
 					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
@@ -198,7 +199,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				c.Header("Content-Transfer-Encoding", "binary")
 				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Header("Accept-Length", fmt.Sprintf("%d", len(content)))
 				c.Writer.Write(content)
 
 				response.Message = "SUCCESS"
@@ -230,18 +231,19 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 					return
 				}
 
-				filename := fmt.Sprintf("%s.%s", submission.FileName, submission.FileExtension)
-				IOWriter, err := storageService.Client.DownloadFile(filename, config.SubmissionDir)
+				filename := fmt.Sprintf("%s%s", submission.FileName, submission.FileExtension)
+				IOReader, cancel, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
+				defer cancel()
+
 				if err != nil {
-					response.Message = "ERROR: CONTENT NOT FOUND IN STORAGE"
+					response.Message = "ERROR: CANNOT DOWNLOAD FILE"
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
-				var content []byte
-				length, err := IOWriter.Write(content)
+				content, err := ioutil.ReadAll(IOReader)
 				if err != nil {
-					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					response.Message = err.Error()
 					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
 				}
@@ -250,7 +252,7 @@ func DownloadSubmissionHandler() gin.HandlerFunc {
 				c.Header("Content-Transfer-Encoding", "binary")
 				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Header("Accept-Length", fmt.Sprintf("%d", len(content)))
 				c.Writer.Write(content)
 
 				response.Message = "SUCCESS"

@@ -192,27 +192,33 @@ func DownloadPhotoHandler() gin.HandlerFunc {
 					return
 				}
 
-				filename := fmt.Sprintf("%s.%s", photo.FileName, photo.FileExtension)
-				IOWriter, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
+				filename := fmt.Sprintf("%s%s", photo.FileName, photo.FileExtension)
+				IOReader, cancel, err := storageService.Client.DownloadFile(filename, config.PhotoDir)
+				defer cancel()
+
 				if err != nil {
-					response.Message = "ERROR: BAD REQUEST"
+					response.Message = "ERROR: CANNOT DOWNLOAD PHOTO"
 					c.AbortWithStatusJSON(http.StatusBadRequest, response)
 					return
 				}
 
-				var content []byte
-				length, err := IOWriter.Write(content)
+				content, err := ioutil.ReadAll(IOReader)
 				if err != nil {
-					response.Message = "ERROR: CONTENT CANNOT BE WRITTEN"
+					response.Message = err.Error()
 					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 					return
+				}
+
+				mtype, err := mimetype.DetectReader(bytes.NewReader(content))
+				if err != nil {
+					response.Message = "ERROR: CANNOT GET CONTENT TYPE"
 				}
 
 				c.Header("Content-Description", "File Transfer")
 				c.Header("Content-Transfer-Encoding", "binary")
 				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Accept-Length", fmt.Sprintf("%d", length))
+				c.Header("Content-Type", mtype.String())
+				c.Header("Accept-Length", fmt.Sprintf("%d", len(content)))
 				c.Writer.Write(content)
 
 				response.Message = "SUCCESS"
