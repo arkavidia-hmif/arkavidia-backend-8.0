@@ -399,6 +399,24 @@ func ChangeStatusParticipantHandler() gin.HandlerFunc {
 					return
 				}
 
+				value, exists := c.Get("id")
+
+				if !exists {
+					response.Message = "UNAUTHORIZED"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+					return
+				}
+
+				teamID := value.(uint)
+
+				condition := models.Membership{TeamID: teamID, ParticipantID: query.ParticipantID}
+				membership := models.Membership{}
+				if err := db.Where(&condition).Find(&membership).Error; err != nil {
+					response.Message = "ERROR: BAD REQUEST"
+					c.AbortWithStatusJSON(http.StatusBadRequest, response)
+					return
+				}
+
 				oldParticipant := models.Participant{Model: gorm.Model{ID: query.ParticipantID}}
 				newParticipant := models.Participant{Status: request.Status}
 				if err := db.Where(&oldParticipant).Updates(&newParticipant).Error; err != nil {
