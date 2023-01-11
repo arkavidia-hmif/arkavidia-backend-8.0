@@ -24,6 +24,11 @@ type StorageClient struct {
 	once         sync.Once
 }
 
+type DownloadFileResponse struct {
+	reader io.Reader
+	cancel context.CancelFunc
+}
+
 func (storageClient *StorageClient) lazyInit() {
 	storageClient.once.Do(func() {
 		client, err := storage.NewClient(context.Background())
@@ -39,26 +44,27 @@ func (storageClient *StorageClient) lazyInit() {
 func (storageClient *StorageClient) DownloadFile(filename string, downloadPath string) (io.Reader, context.CancelFunc, error) {
 	storageClient.lazyInit()
 
-	config := storageConfig.Config.GetMetadata()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)
 	// Duplicate Function Call Suppression Mechanism
 	v, err, _ := storageClient.requestGroup.Do(filename, func() (interface{}, error) {
+		config := storageConfig.Config.GetMetadata()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.FileTimeout)*time.Second)
+
 		storageReader, err := storageClient.client.Bucket(config.BucketName).Object(fmt.Sprintf("%s/%s", downloadPath, filename)).NewReader(ctx)
 		if err != nil {
-			return nil, err
+			return DownloadFileResponse{reader: nil, cancel: cancel}, err
 		}
 		defer storageReader.Close()
 
-		return storageReader, nil
+		return DownloadFileResponse{reader: storageReader, cancel: cancel}, nil
 	})
 
+	res := v.(DownloadFileResponse)
+
 	if err != nil {
-		return nil, cancel, fmt.Errorf("error while downloading file: %v", err)
+		return nil, res.cancel, fmt.Errorf("error while downloading file: %v", err)
 	}
 
-	file := v.(io.Reader)
-
-	return file, cancel, nil
+	return res.reader, res.cancel, nil
 }
 
 func (storageClient *StorageClient) UploadFile(filename string, uploadPath string, content io.Reader) error {
