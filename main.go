@@ -30,7 +30,7 @@ import (
 // REFERENCE: https://freshman.tech/snippets/go/file-content-type/
 // REFERENCE: https://stackoverflow.com/questions/51209439/mime-type-checking-of-files-uploaded-golang
 // ASSIGNED TO: @patrickamadeus
-// STATUS: IN PROGRESS
+// STATUS: DONE
 
 // TODO: Gunakan GormValuerInterface untuk mengautomatisasi enkripsi bcrypt password
 // REFERENCE: https://gorm.io/docs/data_types.html#GormValuerInterface
